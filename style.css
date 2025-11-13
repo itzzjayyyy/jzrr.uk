@@ -168,9 +168,9 @@ body {
 .project-image {
     display: block;
     width: 100%;          /* scales to fit block width */
-    max-width: 600px;     /* keeps original size if container is wider */
+    max-width: 600px;     /* keeps the original 600x600 size */
     height: auto;         /* preserves aspect ratio */
-    margin: 15px auto;    /* centers image with spacing */
+    margin: 15px auto;    /* centers the image with spacing */
     border-radius: 12px;  /* rounded corners */
     box-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4; /* neon glow */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
