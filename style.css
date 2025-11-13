@@ -166,20 +166,20 @@ body {
 }
 
 .project-image {
-    width: 100%;
-    max-height: 300px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin: 15px 0;
-    box-shadow: 0 0 12px #64ffda, 0 0 24px #00bcd4;
+    display: block;
+    width: 100%;          /* scales to fit block width */
+    max-width: 600px;     /* keeps original size if container is wider */
+    height: auto;         /* preserves aspect ratio */
+    margin: 15px auto;    /* centers image with spacing */
+    border-radius: 12px;  /* rounded corners */
+    box-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4; /* neon glow */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .project-image:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px #00bcd4, 0 0 40px #64ffda;
+    transform: scale(1.05); /* subtle zoom on hover */
+    box-shadow: 0 0 25px #00bcd4, 0 0 50px #64ffda;
 }
-
 
 /* Footer Styling */
 footer {
