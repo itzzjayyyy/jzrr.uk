@@ -140,35 +140,6 @@ body {
     color: #e0e0e0;
 }
 
-/* --- NEW CSS FOR IMAGE SIZING --- */
-
-/* This limits the width of the image container to a consistent size, centered */
-.project-image-container {
-    max-width: 350px; 
-    margin: 20px auto; 
-}
-
-.project-image {
-    display: block;
-    width: 100%; /* Image fills its new, smaller container */
-    max-width: none; /* Removing the old max-width: 600px; */
-    /* Removed aspect-ratio: 1 / 1; */
-    height: auto;
-    margin: 0; /* Remove margin, container handles spacing */
-    border-radius: 12px;
-    box-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    object-fit: contain;
-}
-
-.project-image:hover {
-    transform: scale(1.05); /* subtle zoom on hover */
-    box-shadow: 0 0 25px #00bcd4, 0 0 50px #64ffda;
-}
-
-/* --- END OF IMAGE CSS FIX --- */
-
-
 /* Visitor Counter Styling */
 .visitor-counter {
     text-align: center;
