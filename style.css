@@ -168,14 +168,18 @@ body {
 .project-image {
     display: block;
     width: 100%;
-    max-width: 600px;
-    aspect-ratio: 1 / 1;
+    /* Set a smaller max-width for the image */
+    max-width: 400px; 
+    /* The image should be smaller than the text block, which is max 800px wide */
+
+    /* Removed aspect-ratio: 1 / 1; to allow the image to use its natural rectangular shape */
     height: auto;
     margin: 20px auto;
     border-radius: 12px;
     box-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    object-fit: contain;
+    /* Changed to 'cover' to prevent extra background space if you want it to fill the box */
+    object-fit: cover; 
 }
 
 .project-image:hover {
