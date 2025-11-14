@@ -111,14 +111,14 @@ body {
 
 /* Portfolio Section */
 .portfolio-section {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 60px 20px 120px;
 }
 
 /* Project Block Consistency */
 .project-block {
-    max-width: 800px;       /* same width as others */
+    max-width: 900px;       /* same width as others */
     margin: 0 auto 40px;
     padding: 20px;
     background-color: rgba(0, 0, 0, 0.4);
