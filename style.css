@@ -116,13 +116,35 @@ body {
     padding: 60px 20px 120px;
 }
 
+/* Project Block Consistency */
 .project-block {
+    max-width: 800px;       /* same width as others */
+    margin: 0 auto 40px;
+    padding: 20px;
     background-color: rgba(0, 0, 0, 0.4);
     border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 40px;
     box-shadow: 0 0 10px #64ffda;
     animation: fadeIn 1.5s ease-out;
+    text-align: center;     /* centers text + image */
+}
+
+/* Project Image Styling */
+.project-image {
+    display: block;
+    width: 100%;            /* responsive */
+    max-width: 600px;       /* never exceed 600px */
+    aspect-ratio: 1 / 1;    /* keeps square */
+    height: auto;
+    margin: 20px auto;      /* centers inside block */
+    border-radius: 12px;
+    box-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    object-fit: contain;
+}
+
+.project-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #00bcd4, 0 0 40px #64ffda;
 }
 
 .project-title {
@@ -162,25 +184,6 @@ body {
 .counter-widget {
     display: inline-block;
     padding: 8px;
-}
-
-/* Project Image Styling */
-.project-image {
-    display: block;
-    width: 100%;
-    max-width: 600px;   /* fixes image width */
-    aspect-ratio: 1 / 1; /* keeps it square */
-    height: auto;
-    margin: 20px auto;  /* centers and adds breathing room */
-    border-radius: 12px;
-    box-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    object-fit: contain; /* ensures full image is visible */
-}
-
-.project-image:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px #00bcd4, 0 0 40px #64ffda;
 }
 
 /* Footer Styling */
