@@ -92,6 +92,12 @@ body {
     text-shadow: 0 0 10px #00bcd4;
 }
 
+.bingo-subtitle {
+    font-size: 1.05em;
+    margin: 10px 0 20px;
+    opacity: 0.9;
+}
+
 /* Current number */
 #current-label {
     font-size: 1.1em;
@@ -239,13 +245,21 @@ footer {
 <div class="gradient-container"></div>
 
 <div class="hero">
+
     <div class="hero-content">
         <h1>Bingo Number Caller</h1>
+        <p>
+            Use this screen to call numbers for your game.  
+            Click “Next number” whenever you’re ready for the room to see a new one.
+        </p>
     </div>
 
     <div class="bingo-card">
 
-        <h2 class="bingo-title">Click 'Next Number' to start!</h2>
+        <h2 class="bingo-title">Ready when you are</h2>
+        <p class="bingo-subtitle">
+            Nothing fancy here: just fair, random numbers from 1 to 75.
+        </p>
 
         <!-- Current number -->
         <div id="current-wrapper">
@@ -267,10 +281,10 @@ footer {
     </div>
 </div>
 
-<footer>Made privately for my dad 🫠</footer>
+<footer>Have fun, and good luck to everyone playing ✨</footer>
 
 <script>
-const TOTAL_NUMBERS = 90;
+const TOTAL_NUMBERS = 75;
 
 const numberEl     = document.getElementById("number");
 const historyEl    = document.getElementById("history");
@@ -349,25 +363,65 @@ function openProjector() {
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
                 <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
                     html, body {
                         margin: 0;
                         height: 100%;
-                        background: #000;
-                        color: #fff;
                         font-family: 'Orbitron', system-ui, sans-serif;
+                        color: #ffffff;
+                        overflow: hidden;
+                    }
+                    .background {
+                        position: fixed;
+                        inset: 0;
+                        background: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
+                        background-size: 400% 400%;
+                        animation: gradientBG 10s ease infinite;
+                        z-index: -1;
+                    }
+                    @keyframes gradientBG {
+                        0% { background-position: 0% 50%; }
+                        50% { background-position: 100% 50%; }
+                        100% { background-position: 0% 50%; }
+                    }
+                    .wrapper {
+                        position: relative;
+                        z-index: 1;
+                        height: 100%;
                         display: flex;
+                        flex-direction: column;
                         align-items: center;
                         justify-content: center;
-                        overflow: hidden;
+                        text-align: center;
+                        padding: 20px;
+                    }
+                    .label {
+                        font-size: 3vw;
+                        min-font-size: 20px;
+                        text-shadow: 0 0 10px #64ffda, 0 0 20px #00bcd4;
+                        margin-bottom: 1rem;
                     }
                     #projector-number {
                         font-size: 20vw;
+                        line-height: 1;
                         text-shadow: 0 0 30px #64ffda, 0 0 60px #00bcd4;
+                    }
+                    @media (max-width: 700px) {
+                        .label {
+                            font-size: 5vw;
+                        }
+                        #projector-number {
+                            font-size: 30vw;
+                        }
                     }
                 </style>
             </head>
             <body>
-                <div id="projector-number">--</div>
+                <div class="background"></div>
+                <div class="wrapper">
+                    <div class="label">The current number is:</div>
+                    <div id="projector-number">--</div>
+                </div>
             </body>
             </html>
         `);
