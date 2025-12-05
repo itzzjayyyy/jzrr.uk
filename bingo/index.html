@@ -24,7 +24,6 @@
     --button-text: #000000;
     --button-shadow-main: #64ffda;
     --button-shadow-secondary: #00bcd4;
-    --label-text-color: #ffffff;
 }
 
 body {
@@ -41,7 +40,7 @@ body {
     background: var(--bg-gradient);
     background-size: 400% 400%;
     animation: gradientBG 10s ease infinite;
-    z-index: -1;
+    z-index: -2;
 }
 
 @keyframes gradientBG {
@@ -50,8 +49,154 @@ body {
     100% { background-position: 0% 50%; }
 }
 
+/* THEME OVERLAY (asteroids, snow, etc.) */
+#theme-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Asteroids */
+.asteroid {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #eee, #888, #222);
+    box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    opacity: 0.9;
+    --asteroid-scale: 1;
+    animation-name: asteroidDrift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+@keyframes asteroidDrift {
+    0% {
+        transform: translate3d(120vw, 0, 0) scale(var(--asteroid-scale)) rotate(0deg);
+    }
+    100% {
+        transform: translate3d(-40vw, 0, 0) scale(var(--asteroid-scale)) rotate(360deg);
+    }
+}
+
+/* Snow */
+.snowflake {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 0 6px rgba(255,255,255,0.9);
+    animation-name: snowFall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+@keyframes snowFall {
+    0% {
+        transform: translate3d(0, -10vh, 0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 110vh, 0);
+        opacity: 0;
+    }
+}
+
+/* Bubbles */
+.bubble-fx {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.6);
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0));
+    opacity: 0.9;
+    animation-name: bubbleRiseFX;
+    animation-timing-function: ease-out;
+    animation-iteration-count: infinite;
+}
+@keyframes bubbleRiseFX {
+    0% {
+        transform: translate3d(0, 110vh, 0) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, -20vh, 0) scale(1.1);
+        opacity: 0;
+    }
+}
+
+/* Fireflies */
+.firefly {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,0,1), rgba(255,255,0,0.1));
+    box-shadow: 0 0 8px rgba(255,255,0,0.8);
+    opacity: 0.9;
+    animation-name: fireflyDrift;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+@keyframes fireflyDrift {
+    0%, 100% {
+        transform: translate3d(0, 0, 0);
+        opacity: 0.4;
+    }
+    25% {
+        transform: translate3d(20px, -10px, 0);
+        opacity: 1;
+    }
+    50% {
+        transform: translate3d(-10px, 10px, 0);
+        opacity: 0.6;
+    }
+    75% {
+        transform: translate3d(15px, 5px, 0);
+        opacity: 1;
+    }
+}
+
+/* Confetti */
+.confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 16px;
+    border-radius: 2px;
+    background: #fff;
+    opacity: 0.9;
+    transform-origin: center;
+    animation-name: confettiFall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+@keyframes confettiFall {
+    0% {
+        transform: translate3d(0, -15vh, 0) rotateZ(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 110vh, 0) rotateZ(360deg);
+        opacity: 0;
+    }
+}
+
 /* Layout */
 .hero {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -294,7 +439,7 @@ body {
     margin-top: 10px;
 }
 
-/* Bubbles base */
+/* Bubbles (history circles) */
 .bubble {
     display: inline-flex;
     align-items: center;
@@ -366,6 +511,7 @@ footer {
 <body>
 
 <div class="gradient-container"></div>
+<div id="theme-overlay"></div>
 
 <div class="hero">
 
@@ -423,6 +569,7 @@ const resetBtn        = document.getElementById("reset-btn");
 const projectorBtn    = document.getElementById("projector-btn");
 const themeSelect     = document.getElementById("theme-select");
 const previewThemeBtn = document.getElementById("preview-theme-btn");
+const overlayMain     = document.getElementById("theme-overlay");
 
 let remaining = [];
 let history   = [];
@@ -430,11 +577,13 @@ let projectorWindow = null;
 let currentThemeIndex = 0;
 let currentNumberAnimClass = "number-style-pop";
 let currentBubbleAnimClass = "bubble-style-pop";
+let currentOverlayType = "none";
 
-/* 20 THEMES */
+/* THEMES with overlays & animations */
 const themes = [
     {
         name: "Classic Neon (Default)",
+        overlay: "none",
         vars: {
             "--bg-gradient": "linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4)",
             "--primary-accent": "#64ffda",
@@ -451,336 +600,162 @@ const themes = [
         bubbleAnim: "bubble-style-pop"
     },
     {
-        name: "Deep Space",
+        name: "Asteroid Field",
+        overlay: "asteroids",
         vars: {
-            "--bg-gradient": "radial-gradient(circle at top, #bb86fc, #121212 60%)",
-            "--primary-accent": "#bb86fc",
-            "--secondary-accent": "#03dac5",
-            "--card-bg": "rgba(18,18,18,0.85)",
-            "--bubble-bg": "rgba(0,0,0,0.8)",
-            "--main-text-color": "#f5f5f5",
-            "--button-bg": "#bb86fc",
-            "--button-text": "#000000",
-            "--button-shadow-main": "#bb86fc",
-            "--button-shadow-secondary": "#03dac5"
-        },
-        numberAnim: "number-style-slide",
-        bubbleAnim: "bubble-style-rise"
-    },
-    {
-        name: "Sunset Glow",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #ff9a9e, #fecfef, #fe99c0)",
-            "--primary-accent": "#ff9a9e",
-            "--secondary-accent": "#ffc371",
-            "--card-bg": "rgba(0,0,0,0.25)",
-            "--bubble-bg": "rgba(255,255,255,0.1)",
-            "--main-text-color": "#fff4f4",
-            "--button-bg": "#ffc371",
-            "--button-text": "#4a2c2c",
-            "--button-shadow-main": "#ffc371",
-            "--button-shadow-secondary": "#ff9a9e"
-        },
-        numberAnim: "number-style-bounce",
-        bubbleAnim: "bubble-style-fade"
-    },
-    {
-        name: "Matrix Green",
-        vars: {
-            "--bg-gradient": "linear-gradient(160deg, #000000, #003300, #001a00)",
-            "--primary-accent": "#00ff6a",
-            "--secondary-accent": "#00b34d",
-            "--card-bg": "rgba(0,0,0,0.7)",
-            "--bubble-bg": "rgba(0,0,0,0.85)",
-            "--main-text-color": "#c8ffc8",
-            "--button-bg": "#00ff6a",
-            "--button-text": "#001a00",
-            "--button-shadow-main": "#00ff6a",
-            "--button-shadow-secondary": "#00b34d"
-        },
-        numberAnim: "number-style-zoomfade",
-        bubbleAnim: "bubble-style-pop"
-    },
-    {
-        name: "Ocean Breeze",
-        vars: {
-            "--bg-gradient": "linear-gradient(120deg, #00c6ff, #0072ff)",
-            "--primary-accent": "#a7ffeb",
-            "--secondary-accent": "#18ffff",
-            "--card-bg": "rgba(0, 30, 60, 0.6)",
-            "--bubble-bg": "rgba(0,0,0,0.5)",
-            "--main-text-color": "#e0f7fa",
-            "--button-bg": "#18ffff",
-            "--button-text": "#004d40",
-            "--button-shadow-main": "#18ffff",
-            "--button-shadow-secondary": "#00c6ff"
-        },
-        numberAnim: "number-style-slide",
-        bubbleAnim: "bubble-style-pulse"
-    },
-    {
-        name: "Warm Ember",
-        vars: {
-            "--bg-gradient": "linear-gradient(140deg, #3e2723, #bf360c, #ff7043)",
-            "--primary-accent": "#ffab91",
-            "--secondary-accent": "#ffcc80",
-            "--card-bg": "rgba(25, 13, 10, 0.8)",
-            "--bubble-bg": "rgba(0,0,0,0.7)",
-            "--main-text-color": "#ffe0b2",
-            "--button-bg": "#ff7043",
-            "--button-text": "#3e2723",
-            "--button-shadow-main": "#ff7043",
-            "--button-shadow-secondary": "#ffab91"
-        },
-        numberAnim: "number-style-pop",
-        bubbleAnim: "bubble-style-rise"
-    },
-    {
-        name: "Retro Arcade",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #000000, #1a1a40, #4a148c)",
-            "--primary-accent": "#ffea00",
-            "--secondary-accent": "#ff4081",
-            "--card-bg": "rgba(0,0,0,0.8)",
-            "--bubble-bg": "rgba(10,10,30,0.9)",
-            "--main-text-color": "#f5f5f5",
-            "--button-bg": "#ffea00",
-            "--button-text": "#1a1a40",
-            "--button-shadow-main": "#ffea00",
-            "--button-shadow-secondary": "#ff4081"
-        },
-        numberAnim: "number-style-spin",
-        bubbleAnim: "bubble-style-pop"
-    },
-    {
-        name: "Soft Pastel",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #b3ffe2, #f3e5f5, #bbdefb)",
-            "--primary-accent": "#7e57c2",
-            "--secondary-accent": "#26a69a",
-            "--card-bg": "rgba(255,255,255,0.4)",
-            "--bubble-bg": "rgba(255,255,255,0.7)",
-            "--main-text-color": "#263238",
-            "--button-bg": "#7e57c2",
-            "--button-text": "#ffffff",
-            "--button-shadow-main": "#7e57c2",
-            "--button-shadow-secondary": "#26a69a"
-        },
-        numberAnim: "number-style-bounce",
-        bubbleAnim: "bubble-style-fade"
-    },
-    {
-        name: "Ice & Steel",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
-            "--primary-accent": "#81d4fa",
-            "--secondary-accent": "#b3e5fc",
-            "--card-bg": "rgba(0,0,0,0.65)",
-            "--bubble-bg": "rgba(0,0,0,0.8)",
-            "--main-text-color": "#e1f5fe",
-            "--button-bg": "#81d4fa",
-            "--button-text": "#0f2027",
-            "--button-shadow-main": "#81d4fa",
-            "--button-shadow-secondary": "#4fc3f7"
-        },
-        numberAnim: "number-style-slide",
-        bubbleAnim: "bubble-style-rise"
-    },
-    {
-        name: "Royal Purple",
-        vars: {
-            "--bg-gradient": "linear-gradient(145deg, #4a148c, #7b1fa2, #ce93d8)",
-            "--primary-accent": "#e1bee7",
-            "--secondary-accent": "#ff80ab",
-            "--card-bg": "rgba(26,0,51,0.8)",
-            "--bubble-bg": "rgba(0,0,0,0.7)",
-            "--main-text-color": "#f3e5f5",
-            "--button-bg": "#ff80ab",
-            "--button-text": "#4a148c",
-            "--button-shadow-main": "#ff80ab",
-            "--button-shadow-secondary": "#e1bee7"
-        },
-        numberAnim: "number-style-zoomfade",
-        bubbleAnim: "bubble-style-pulse"
-    },
-    {
-        name: "Forest Mist",
-        vars: {
-            "--bg-gradient": "linear-gradient(155deg, #004d40, #1b5e20, #a5d6a7)",
-            "--primary-accent": "#c5e1a5",
-            "--secondary-accent": "#80cbc4",
-            "--card-bg": "rgba(0,20,10,0.75)",
-            "--bubble-bg": "rgba(0,0,0,0.7)",
-            "--main-text-color": "#e8f5e9",
-            "--button-bg": "#a5d6a7",
-            "--button-text": "#1b5e20",
-            "--button-shadow-main": "#a5d6a7",
-            "--button-shadow-secondary": "#80cbc4"
-        },
-        numberAnim: "number-style-pop",
-        bubbleAnim: "bubble-style-fade"
-    },
-    {
-        name: "Candy Crush",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #ff6f91, #ff9671, #ffc75f, #f9f871)",
-            "--primary-accent": "#ff6f91",
-            "--secondary-accent": "#ff9671",
-            "--card-bg": "rgba(255,255,255,0.2)",
-            "--bubble-bg": "rgba(255,255,255,0.85)",
-            "--main-text-color": "#4e342e",
-            "--button-bg": "#ff9671",
-            "--button-text": "#4e342e",
-            "--button-shadow-main": "#ff6f91",
-            "--button-shadow-secondary": "#ffc75f"
-        },
-        numberAnim: "number-style-spin",
-        bubbleAnim: "bubble-style-pop"
-    },
-    {
-        name: "Monochrome Glow",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #000000, #424242, #bdbdbd)",
-            "--primary-accent": "#ffffff",
-            "--secondary-accent": "#bdbdbd",
-            "--card-bg": "rgba(0,0,0,0.75)",
-            "--bubble-bg": "rgba(33,33,33,0.9)",
-            "--main-text-color": "#eeeeee",
-            "--button-bg": "#ffffff",
-            "--button-text": "#000000",
-            "--button-shadow-main": "#ffffff",
-            "--button-shadow-secondary": "#bdbdbd"
-        },
-        numberAnim: "number-style-slide",
-        bubbleAnim: "bubble-style-rise"
-    },
-    {
-        name: "Tropical Night",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #0f2027, #2c5364, #00b894)",
-            "--primary-accent": "#00e676",
-            "--secondary-accent": "#18ffff",
-            "--card-bg": "rgba(0,0,0,0.7)",
-            "--bubble-bg": "rgba(0,0,0,0.8)",
-            "--main-text-color": "#e0f2f1",
-            "--button-bg": "#00e676",
-            "--button-text": "#004d40",
-            "--button-shadow-main": "#00e676",
-            "--button-shadow-secondary": "#18ffff"
-        },
-        numberAnim: "number-style-bounce",
-        bubbleAnim: "bubble-style-pulse"
-    },
-    {
-        name: "Cyber Red",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #000000, #b71c1c, #ff1744)",
-            "--primary-accent": "#ff5252",
-            "--secondary-accent": "#ff8a80",
-            "--card-bg": "rgba(0,0,0,0.8)",
+            "--bg-gradient": "radial-gradient(circle at top, #000018, #000000 60%)",
+            "--primary-accent": "#b3e5fc",
+            "--secondary-accent": "#90caf9",
+            "--card-bg": "rgba(5,5,25,0.9)",
             "--bubble-bg": "rgba(0,0,0,0.9)",
-            "--main-text-color": "#ffebee",
-            "--button-bg": "#ff5252",
-            "--button-text": "#000000",
-            "--button-shadow-main": "#ff5252",
-            "--button-shadow-secondary": "#ff8a80"
+            "--main-text-color": "#e3f2fd",
+            "--button-bg": "#90caf9",
+            "--button-text": "#000018",
+            "--button-shadow-main": "#90caf9",
+            "--button-shadow-secondary": "#b3e5fc"
         },
         numberAnim: "number-style-zoomfade",
-        bubbleAnim: "bubble-style-pop"
+        bubbleAnim: "bubble-style-rise"
     },
     {
-        name: "Lavender Dream",
+        name: "Snowy Night",
+        overlay: "snow",
         vars: {
-            "--bg-gradient": "linear-gradient(135deg, #b39ddb, #ce93d8, #f3e5f5)",
-            "--primary-accent": "#7e57c2",
-            "--secondary-accent": "#ba68c8",
-            "--card-bg": "rgba(255,255,255,0.5)",
-            "--bubble-bg": "rgba(255,255,255,0.8)",
-            "--main-text-color": "#4a148c",
-            "--button-bg": "#ba68c8",
-            "--button-text": "#ffffff",
-            "--button-shadow-main": "#ba68c8",
-            "--button-shadow-secondary": "#7e57c2"
-        },
-        numberAnim: "number-style-pop",
-        bubbleAnim: "bubble-style-fade"
-    },
-    {
-        name: "Midnight Blue",
-        vars: {
-            "--bg-gradient": "linear-gradient(160deg, #0d47a1, #1a237e, #00051a)",
-            "--primary-accent": "#82b1ff",
-            "--secondary-accent": "#40c4ff",
-            "--card-bg": "rgba(0,0,40,0.7)",
+            "--bg-gradient": "linear-gradient(160deg, #0d47a1, #1a237e, #000000)",
+            "--primary-accent": "#ffffff",
+            "--secondary-accent": "#bbdefb",
+            "--card-bg": "rgba(15,15,40,0.85)",
             "--bubble-bg": "rgba(0,0,0,0.8)",
             "--main-text-color": "#e3f2fd",
-            "--button-bg": "#40c4ff",
+            "--button-bg": "#bbdefb",
             "--button-text": "#0d47a1",
-            "--button-shadow-main": "#40c4ff",
-            "--button-shadow-secondary": "#82b1ff"
+            "--button-shadow-main": "#bbdefb",
+            "--button-shadow-secondary": "#ffffff"
         },
         numberAnim: "number-style-slide",
-        bubbleAnim: "bubble-style-rise"
+        bubbleAnim: "bubble-style-fade"
     },
     {
-        name: "Gold Lux",
+        name: "Deep Sea Bubbles",
+        overlay: "bubbles",
         vars: {
-            "--bg-gradient": "linear-gradient(135deg, #3e2723, #5d4037, #ffca28)",
-            "--primary-accent": "#ffca28",
-            "--secondary-accent": "#ffe082",
-            "--card-bg": "rgba(33, 20, 10, 0.9)",
-            "--bubble-bg": "rgba(0,0,0,0.8)",
-            "--main-text-color": "#fff8e1",
-            "--button-bg": "#ffca28",
-            "--button-text": "#3e2723",
-            "--button-shadow-main": "#ffca28",
-            "--button-shadow-secondary": "#ffe082"
+            "--bg-gradient": "linear-gradient(135deg, #001f3f, #003f5c, #2f4b7c)",
+            "--primary-accent": "#4dd0e1",
+            "--secondary-accent": "#80deea",
+            "--card-bg": "rgba(0, 10, 30, 0.8)",
+            "--bubble-bg": "rgba(0,0,0,0.7)",
+            "--main-text-color": "#e0f7fa",
+            "--button-bg": "#4dd0e1",
+            "--button-text": "#001f3f",
+            "--button-shadow-main": "#4dd0e1",
+            "--button-shadow-secondary": "#80deea"
         },
-        numberAnim: "number-style-spin",
+        numberAnim: "number-style-bounce",
         bubbleAnim: "bubble-style-pulse"
     },
     {
-        name: "Mint Fresh",
+        name: "Firefly Meadow",
+        overlay: "fireflies",
         vars: {
-            "--bg-gradient": "linear-gradient(135deg, #a8ff78, #78ffd6)",
-            "--primary-accent": "#00bfa5",
-            "--secondary-accent": "#1de9b6",
-            "--card-bg": "rgba(255,255,255,0.3)",
-            "--bubble-bg": "rgba(255,255,255,0.8)",
-            "--main-text-color": "#004d40",
-            "--button-bg": "#1de9b6",
-            "--button-text": "#004d40",
-            "--button-shadow-main": "#1de9b6",
-            "--button-shadow-secondary": "#00bfa5"
+            "--bg-gradient": "linear-gradient(150deg, #001a00, #003300, #004d40)",
+            "--primary-accent": "#cddc39",
+            "--secondary-accent": "#aeea00",
+            "--card-bg": "rgba(0, 20, 0, 0.85)",
+            "--bubble-bg": "rgba(0,0,0,0.8)",
+            "--main-text-color": "#e8f5e9",
+            "--button-bg": "#cddc39",
+            "--button-text": "#1b5e20",
+            "--button-shadow-main": "#cddc39",
+            "--button-shadow-secondary": "#aeea00"
         },
-        numberAnim: "number-style-bounce",
-        bubbleAnim: "bubble-style-pop"
+        numberAnim: "number-style-pop",
+        bubbleAnim: "bubble-style-rise"
     },
     {
-        name: "Grayscale Minimal",
+        name: "Confetti Party",
+        overlay: "confetti",
         vars: {
-            "--bg-gradient": "linear-gradient(135deg, #212121, #424242, #616161)",
-            "--primary-accent": "#f5f5f5",
-            "--secondary-accent": "#bdbdbd",
+            "--bg-gradient": "linear-gradient(135deg, #4a148c, #ff6f00, #d500f9)",
+            "--primary-accent": "#ffd54f",
+            "--secondary-accent": "#ff8a65",
             "--card-bg": "rgba(0,0,0,0.75)",
-            "--bubble-bg": "rgba(33,33,33,0.9)",
-            "--main-text-color": "#eeeeee",
-            "--button-bg": "#f5f5f5",
-            "--button-text": "#212121",
-            "--button-shadow-main": "#f5f5f5",
-            "--button-shadow-secondary": "#bdbdbd"
+            "--bubble-bg": "rgba(0,0,0,0.85)",
+            "--main-text-color": "#fff3e0",
+            "--button-bg": "#ffd54f",
+            "--button-text": "#4a148c",
+            "--button-shadow-main": "#ffd54f",
+            "--button-shadow-secondary": "#ff8a65"
         },
-        numberAnim: "number-style-zoomfade",
-        bubbleAnim: "bubble-style-fade"
+        numberAnim: "number-style-spin",
+        bubbleAnim: "bubble-style-pop"
     }
 ];
 
-/* Helper to apply theme vars to a document (main + projector) */
+/* Helpers to apply theme vars */
 function applyThemeToDocument(doc, theme) {
     const rootStyle = doc.documentElement.style;
     Object.entries(theme.vars).forEach(([key, value]) => {
         rootStyle.setProperty(key, value);
     });
+}
+
+/* Overlay builder (main + projector) */
+function buildOverlay(doc, type) {
+    const overlay = doc.getElementById("theme-overlay");
+    if (!overlay) return;
+
+    overlay.innerHTML = "";
+    if (type === "none") return;
+
+    const count = (cls) => {
+        switch (cls) {
+            case "asteroids": return 18;
+            case "snow": return 80;
+            case "bubbles": return 30;
+            case "fireflies": return 25;
+            case "confetti": return 60;
+            default: return 0;
+        }
+    };
+
+    const total = count(type);
+
+    for (let i = 0; i < total; i++) {
+        let el = doc.createElement("div");
+        if (type === "asteroids") {
+            el.className = "asteroid";
+            el.style.top = (Math.random() * 100) + "%";
+            el.style.left = (Math.random() * 100) + "%";
+            el.style.setProperty("--asteroid-scale", (0.4 + Math.random() * 1.4).toFixed(2));
+            el.style.animationDuration = (8 + Math.random() * 12).toFixed(1) + "s";
+            el.style.animationDelay = (-Math.random() * 20).toFixed(1) + "s";
+        } else if (type === "snow") {
+            el.className = "snowflake";
+            el.style.left = (Math.random() * 100) + "%";
+            el.style.animationDuration = (8 + Math.random() * 10).toFixed(1) + "s";
+            el.style.animationDelay = (-Math.random() * 10).toFixed(1) + "s";
+        } else if (type === "bubbles") {
+            el.className = "bubble-fx";
+            el.style.left = (Math.random() * 100) + "%";
+            el.style.animationDuration = (8 + Math.random() * 10).toFixed(1) + "s";
+            el.style.animationDelay = (-Math.random() * 10).toFixed(1) + "s";
+            const scale = 0.5 + Math.random() * 1.2;
+            el.style.transform = "scale(" + scale.toFixed(2) + ")";
+        } else if (type === "fireflies") {
+            el.className = "firefly";
+            el.style.top = (Math.random() * 100) + "%";
+            el.style.left = (Math.random() * 100) + "%";
+            el.style.animationDuration = (6 + Math.random() * 6).toFixed(1) + "s";
+            el.style.animationDelay = (-Math.random() * 6).toFixed(1) + "s";
+        } else if (type === "confetti") {
+            el.className = "confetti-piece";
+            el.style.left = (Math.random() * 100) + "%";
+            el.style.background = ["#ff1744", "#ffea00", "#00e5ff", "#ff9100", "#d500f9"][Math.floor(Math.random() * 5)];
+            el.style.animationDuration = (5 + Math.random() * 6).toFixed(1) + "s";
+            el.style.animationDelay = (-Math.random() * 6).toFixed(1) + "s";
+        }
+        overlay.appendChild(el);
+    }
 }
 
 /* Set theme by index */
@@ -789,22 +764,21 @@ function setTheme(index) {
     currentThemeIndex = index;
     currentNumberAnimClass = theme.numberAnim;
     currentBubbleAnimClass = theme.bubbleAnim;
+    currentOverlayType = theme.overlay || "none";
 
     // main document
     applyThemeToDocument(document, theme);
+    buildOverlay(document, currentOverlayType);
 
     // projector (if open)
     if (projectorWindow && !projectorWindow.closed) {
         applyThemeToDocument(projectorWindow.document, theme);
-        // also re-style current number
-        if (history.length > 0) {
-            updateProjector(history[history.length - 1]);
-        } else {
-            updateProjector(null);
-        }
+        buildOverlay(projectorWindow.document, currentOverlayType);
+        if (history.length > 0) updateProjector(history[history.length - 1]);
+        else updateProjector(null);
     }
 
-    // refresh number/bubbles visually with new animation classes
+    // refresh number/bubbles visually
     if (history.length > 0) {
         updateDisplay(history[history.length - 1]);
     } else {
@@ -828,7 +802,7 @@ function initGame() {
     remaining = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
     history   = [];
     numberEl.textContent = "--";
-    numberEl.className = ""; // reset classes
+    numberEl.className = "";
     historyEl.innerHTML = "";
     drawBtn.disabled = false;
     updateProjector(null);
@@ -847,13 +821,11 @@ function drawNumber() {
 }
 
 function updateDisplay(num) {
-    // re-trigger animation on big number
     numberEl.classList.remove("number-animated", currentNumberAnimClass);
-    void numberEl.offsetWidth; // force reflow
+    void numberEl.offsetWidth;
     numberEl.textContent = num;
     numberEl.classList.add("number-animated", currentNumberAnimClass);
 
-    // rebuild history with cascade animation
     historyEl.innerHTML = "";
     history.forEach((n, index) => {
         const bubble = document.createElement("div");
@@ -894,6 +866,13 @@ function openProjector() {
                         --bg-gradient: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
                         --primary-accent: #64ffda;
                         --secondary-accent: #00bcd4;
+                        --card-bg: rgba(0,0,0,0.35);
+                        --bubble-bg: rgba(0,0,0,0.7);
+                        --main-text-color: #e0e0e0;
+                        --button-bg: #64ffda;
+                        --button-text: #000000;
+                        --button-shadow-main: #64ffda;
+                        --button-shadow-secondary: #00bcd4;
                     }
                     * { box-sizing: border-box; margin: 0; padding: 0; }
                     html, body {
@@ -907,14 +886,152 @@ function openProjector() {
                         position: fixed;
                         inset: 0;
                         background: var(--bg-gradient);
-                        background-size: 400% 400%;
+
+background-size: 400% 400%;
                         animation: gradientBG 10s ease infinite;
-                        z-index: -1;
+                        z-index: -2;
                     }
                     @keyframes gradientBG {
                         0% { background-position: 0% 50%; }
                         50% { background-position: 100% 50%; }
                         100% { background-position: 0% 50%; }
+                    }
+                    #theme-overlay {
+                        position: fixed;
+                        inset: 0;
+                        z-index: -1;
+                        pointer-events: none;
+                        overflow: hidden;
+                    }
+                    /* Asteroids */
+                    .asteroid {
+                        position: absolute;
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle at 30% 30%, #eee, #888, #222);
+                        box-shadow: 0 0 10px rgba(255,255,255,0.1);
+                        opacity: 0.9;
+                        --asteroid-scale: 1;
+                        animation-name: asteroidDrift;
+                        animation-timing-function: linear;
+                        animation-iteration-count: infinite;
+                    }
+                    @keyframes asteroidDrift {
+                        0% {
+                            transform: translate3d(120vw, 0, 0) scale(var(--asteroid-scale)) rotate(0deg);
+                        }
+                        100% {
+                            transform: translate3d(-40vw, 0, 0) scale(var(--asteroid-scale)) rotate(360deg);
+                        }
+                    }
+                    /* Snow */
+                    .snowflake {
+                        position: absolute;
+                        width: 6px;
+                        height: 6px;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.95);
+                        box-shadow: 0 0 6px rgba(255,255,255,0.9);
+                        animation-name: snowFall;
+                        animation-timing-function: linear;
+                        animation-iteration-count: infinite;
+                    }
+                    @keyframes snowFall {
+                        0% {
+                            transform: translate3d(0, -10vh, 0);
+                            opacity: 0;
+                        }
+                        10% {
+                            opacity: 1;
+                        }
+                        100% {
+                            transform: translate3d(0, 110vh, 0);
+                            opacity: 0;
+                        }
+                    }
+                    /* Bubbles */
+                    .bubble-fx {
+                        position: absolute;
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        border: 1px solid rgba(255,255,255,0.6);
+                        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0));
+                        opacity: 0.9;
+                        animation-name: bubbleRiseFX;
+                        animation-timing-function: ease-out;
+                        animation-iteration-count: infinite;
+                    }
+                    @keyframes bubbleRiseFX {
+                        0% {
+                            transform: translate3d(0, 110vh, 0) scale(0.5);
+                            opacity: 0;
+                        }
+                        20% {
+                            opacity: 1;
+                        }
+                        100% {
+                            transform: translate3d(0, -20vh, 0) scale(1.1);
+                            opacity: 0;
+                        }
+                    }
+                    /* Fireflies */
+                    .firefly {
+                        position: absolute;
+                        width: 6px;
+                        height: 6px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle, rgba(255,255,0,1), rgba(255,255,0,0.1));
+                        box-shadow: 0 0 8px rgba(255,255,0,0.8);
+                        opacity: 0.9;
+                        animation-name: fireflyDrift;
+                        animation-timing-function: ease-in-out;
+                        animation-iteration-count: infinite;
+                    }
+                    @keyframes fireflyDrift {
+                        0%, 100% {
+                            transform: translate3d(0, 0, 0);
+                            opacity: 0.4;
+                        }
+                        25% {
+                            transform: translate3d(20px, -10px, 0);
+                            opacity: 1;
+                        }
+                        50% {
+                            transform: translate3d(-10px, 10px, 0);
+                            opacity: 0.6;
+                        }
+                        75% {
+                            transform: translate3d(15px, 5px, 0);
+                            opacity: 1;
+                        }
+                    }
+                    /* Confetti */
+                    .confetti-piece {
+                        position: absolute;
+                        width: 8px;
+                        height: 16px;
+                        border-radius: 2px;
+                        background: #fff;
+                        opacity: 0.9;
+                        transform-origin: center;
+                        animation-name: confettiFall;
+                        animation-timing-function: linear;
+                        animation-iteration-count: infinite;
+                    }
+                    @keyframes confettiFall {
+                        0% {
+                            transform: translate3d(0, -15vh, 0) rotateZ(0deg);
+                            opacity: 0;
+                        }
+                        10% {
+                            opacity: 1;
+                        }
+                        100% {
+                            transform: translate3d(0, 110vh, 0) rotateZ(360deg);
+                            opacity: 0;
+                        }
                     }
                     .wrapper {
                         position: relative;
@@ -945,6 +1062,7 @@ function openProjector() {
             </head>
             <body>
                 <div class="background"></div>
+                <div id="theme-overlay"></div>
                 <div class="wrapper">
                     <div class="label">The current number is:</div>
                     <div id="projector-number">--</div>
@@ -954,25 +1072,21 @@ function openProjector() {
         `);
         projectorWindow.document.close();
 
-        // apply current theme to projector window
+        // apply current theme & overlay after load
         setTimeout(() => {
             const theme = themes[currentThemeIndex] || themes[0];
             applyThemeToDocument(projectorWindow.document, theme);
-            if (history.length > 0) {
-                updateProjector(history[history.length - 1]);
-            } else {
-                updateProjector(null);
-            }
+            buildOverlay(projectorWindow.document, currentOverlayType);
+            if (history.length > 0) updateProjector(history[history.length - 1]);
+            else updateProjector(null);
         }, 50);
     } else {
-        // if already open, just sync content and theme
+        // already open: sync theme + overlay + number
         const theme = themes[currentThemeIndex] || themes[0];
         applyThemeToDocument(projectorWindow.document, theme);
-        if (history.length > 0) {
-            updateProjector(history[history.length - 1]);
-        } else {
-            updateProjector(null);
-        }
+        buildOverlay(projectorWindow.document, currentOverlayType);
+        if (history.length > 0) updateProjector(history[history.length - 1]);
+        else updateProjector(null);
     }
 }
 
@@ -983,14 +1097,10 @@ function updateProjector(num) {
     const el  = doc.getElementById("projector-number");
     if (!el) return;
 
-    if (num === null) {
-        el.textContent = "--";
-    } else {
-        el.textContent = String(num);
-    }
+    el.textContent = (num == null ? "--" : String(num));
 }
 
-/* EVENT LISTENERS */
+/* EVENTS */
 drawBtn.addEventListener("click", drawNumber);
 
 resetBtn.addEventListener("click", () => {
@@ -1006,7 +1116,7 @@ previewThemeBtn.addEventListener("click", () => {
 
 /* INIT */
 initThemeSelect();
-setTheme(0);      // default theme (your original)
+setTheme(0);   // default = Classic Neon
 initGame();
 </script>
 
