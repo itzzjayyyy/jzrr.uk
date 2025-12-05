@@ -462,23 +462,40 @@ body {
 }
 
 /* Caller prompt panel (only on main screen) */
-    /* Caller prompt animations */
 .caller-prompt {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
     transition: opacity 0.35s ease, transform 0.35s ease;
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.7);
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    gap: 12px;
 }
-
 .caller-prompt.visible {
+    display: flex;
     opacity: 1;
     transform: translateY(0);
 }
-
+.caller-prompt-content {
+    text-align: left;
+}
+.caller-prompt-title {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-bottom: 4px;
+}
 .caller-prompt-text {
+    font-size: 1em;
+    font-weight: 600;
     display: inline-block;
+}
+.prompt-animate {
     animation: promptPop 0.55s ease forwards;
 }
-
 @keyframes promptPop {
     0% {
         opacity: 0;
@@ -494,34 +511,6 @@ body {
         transform: scale(1);
     }
 }
-.caller-prompt {
-    margin-top: 18px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: rgba(0,0,0,0.7);
-    box-shadow: 0 0 12px rgba(0,0,0,0.6);
-    display: none;
-    align-items: center;
-    gap: 12px;
-}
-.caller-prompt.visible {
-    display: flex;
-}
-.caller-prompt-content {
-    text-align: left;
-}
-.prompt-animate {
-    animation: promptPop 0.55s ease forwards;
-}
-.caller-prompt-title {
-    font-size: 0.9em;
-    opacity: 0.8;
-    margin-bottom: 4px;
-}
-.caller-prompt-text {
-    font-size: 1em;
-    font-weight: 600;
-}
 
 /* Footer */
 footer {
@@ -532,8 +521,8 @@ footer {
 }
 </style>
 </head>
-<body>
 
+<body>
 <div class="gradient-container"></div>
 <div id="theme-overlay"></div>
 
@@ -576,7 +565,6 @@ footer {
             </div>
         </div>
 
-
         <!-- History -->
         <h3 id="history-title">Numbers so far:</h3>
         <div id="history"></div>
@@ -587,6 +575,7 @@ footer {
 <footer>Made privately for my dad 🙂‍↔️</footer>
 
 <script>
+
 const TOTAL_NUMBERS = 90;
 const STORAGE_KEY = "bingoCallerState_v1";
 
@@ -931,7 +920,7 @@ function buildCallerPromptText(num) {
 }
 
 /* Exposed functions for dev console */
-function enableCallerPrompt(imageUrl) {
+function enableCallerPrompt() {
     callerPromptEnabled = true;
     callerPromptEl.classList.add("visible");
 
