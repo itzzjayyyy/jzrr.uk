@@ -462,6 +462,38 @@ body {
 }
 
 /* Caller prompt panel (only on main screen) */
+    /* Caller prompt animations */
+.caller-prompt {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.caller-prompt.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.caller-prompt-text {
+    display: inline-block;
+    animation: promptPop 0.55s ease forwards;
+}
+
+@keyframes promptPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(6px);
+        filter: blur(3px);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.05) translateY(0);
+        filter: blur(0);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
 .caller-prompt {
     margin-top: 18px;
     padding: 12px 14px;
@@ -475,15 +507,11 @@ body {
 .caller-prompt.visible {
     display: flex;
 }
-.caller-prompt img {
-    width: 64px;
-    height: 64px;
-    border-radius: 10px;
-    object-fit: cover;
-    box-shadow: 0 0 10px rgba(0,0,0,0.6);
-}
 .caller-prompt-content {
     text-align: left;
+}
+.prompt-animate {
+    animation: promptPop 0.55s ease forwards;
 }
 .caller-prompt-title {
     font-size: 0.9em;
@@ -540,7 +568,6 @@ footer {
 
         <!-- Caller prompt panel (hidden unless enabled from dev console) -->
         <div id="caller-prompt" class="caller-prompt">
-            <img id="caller-prompt-image" src="" alt="Prompt helper">
             <div class="caller-prompt-content">
                 <div class="caller-prompt-title">What to say:</div>
                 <div id="caller-prompt-text" class="caller-prompt-text">
@@ -548,6 +575,7 @@ footer {
                 </div>
             </div>
         </div>
+
 
         <!-- History -->
         <h3 id="history-title">Numbers so far:</h3>
@@ -572,7 +600,6 @@ const overlayMain  = document.getElementById("theme-overlay");
 
 /* caller prompt elements */
 const callerPromptEl   = document.getElementById("caller-prompt");
-const callerPromptImg  = document.getElementById("caller-prompt-image");
 const callerPromptText = document.getElementById("caller-prompt-text");
 
 let remaining = [];
@@ -762,7 +789,6 @@ function saveState() {
             remaining,
             currentThemeIndex,
             callerPromptEnabled,
-            callerPromptImageSrc: callerPromptImg.src || ""
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
@@ -907,9 +933,6 @@ function buildCallerPromptText(num) {
 /* Exposed functions for dev console */
 function enableCallerPrompt(imageUrl) {
     callerPromptEnabled = true;
-    if (imageUrl) {
-        callerPromptImg.src = imageUrl;
-    }
     callerPromptEl.classList.add("visible");
 
     const lastNumber = history.length ? history[history.length - 1] : null;
@@ -976,7 +999,10 @@ function updateDisplay(num) {
     });
 
     if (callerPromptEnabled) {
+        callerPromptText.classList.remove("prompt-animate"); // reset animation
+        void callerPromptText.offsetWidth; // force reflow
         callerPromptText.textContent = buildCallerPromptText(num);
+        callerPromptText.classList.add("prompt-animate");
     }
 
     updateProjector(num);
@@ -1283,9 +1309,6 @@ function bootstrap() {
         currentThemeIndex = stored.currentThemeIndex || 0;
         callerPromptEnabled = !!stored.callerPromptEnabled;
 
-        if (stored.callerPromptImageSrc) {
-            callerPromptImg.src = stored.callerPromptImageSrc;
-        }
         if (callerPromptEnabled) {
             callerPromptEl.classList.add("visible");
         } else {
