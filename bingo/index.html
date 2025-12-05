@@ -12,9 +12,24 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* THEME VARIABLES (default = your original) */
+:root {
+    --bg-gradient: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
+    --primary-accent: #64ffda;
+    --secondary-accent: #00bcd4;
+    --card-bg: rgba(0,0,0,0.35);
+    --bubble-bg: rgba(0,0,0,0.7);
+    --main-text-color: #e0e0e0;
+    --button-bg: #64ffda;
+    --button-text: #000000;
+    --button-shadow-main: #64ffda;
+    --button-shadow-secondary: #00bcd4;
+    --label-text-color: #ffffff;
+}
+
 body {
     font-family: 'Roboto Condensed', sans-serif;
-    color: #e0e0e0;
+    color: var(--main-text-color);
     overflow-x: hidden;
     padding-bottom: 60px;
 }
@@ -23,7 +38,7 @@ body {
 .gradient-container {
     position: fixed;
     inset: 0;
-    background: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
+    background: var(--bg-gradient);
     background-size: 400% 400%;
     animation: gradientBG 10s ease infinite;
     z-index: -1;
@@ -59,24 +74,24 @@ body {
 .hero-content h1 {
     font-family: 'Orbitron', sans-serif;
     font-size: 3.2em;
-    text-shadow: 0 0 15px #64ffda, 0 0 30px #00bcd4;
+    text-shadow: 0 0 15px var(--primary-accent), 0 0 30px var(--secondary-accent);
 }
 
 .hero-content p {
     margin-top: 10px;
     font-size: 1.15em;
-    text-shadow: 0 0 8px #64ffda;
+    text-shadow: 0 0 8px var(--primary-accent);
 }
 
 /* Bingo card container */
 .bingo-card {
     margin-top: 30px;
-    background: rgba(0,0,0,0.35);
+    background: var(--card-bg);
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 0 15px #64ffda;
+    box-shadow: 0 0 15px var(--primary-accent);
     width: 90%;
-    max-width: 500px;
+    max-width: 520px;
     animation: cardFloatIn 1s ease-out 0.15s both;
 }
 
@@ -88,8 +103,8 @@ body {
 .bingo-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.1em;
-    color: #64ffda;
-    text-shadow: 0 0 10px #00bcd4;
+    color: var(--primary-accent);
+    text-shadow: 0 0 10px var(--secondary-accent);
 }
 
 .bingo-subtitle {
@@ -108,33 +123,94 @@ body {
 #number {
     font-size: 4em;
     font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 15px #64ffda, 0 0 25px #00bcd4;
+    text-shadow: 0 0 15px var(--primary-accent), 0 0 25px var(--secondary-accent);
     margin-top: 8px;
     min-height: 1.2em;
 }
 
-/* Number animation */
-.number-animate {
-    animation: numberPop 0.55s cubic-bezier(0.2, 0.7, 0.3, 1.2);
+/* Number animation styles */
+.number-animated {
+    animation-duration: 0.6s;
+    animation-fill-mode: both;
 }
 
+/* 1) Pop */
+.number-style-pop {
+    animation-name: numberPop;
+}
 @keyframes numberPop {
     0% {
         transform: scale(0.4) rotateX(70deg);
         opacity: 0;
-        text-shadow: 0 0 0 #64ffda;
         filter: blur(4px);
     }
     55% {
         transform: scale(1.15) rotateX(0deg);
         opacity: 1;
-        text-shadow: 0 0 18px #64ffda, 0 0 30px #00bcd4;
         filter: blur(0);
     }
     100% {
         transform: scale(1) rotateX(0deg);
-        text-shadow: 0 0 12px #64ffda, 0 0 22px #00bcd4;
     }
+}
+
+/* 2) Slide in from left */
+.number-style-slide {
+    animation-name: numberSlide;
+}
+@keyframes numberSlide {
+    0% {
+        transform: translateX(-80px);
+        opacity: 0;
+        filter: blur(3px);
+    }
+    60% {
+        transform: translateX(10px);
+        opacity: 1;
+        filter: blur(0);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* 3) Spin in */
+.number-style-spin {
+    animation-name: numberSpin;
+}
+@keyframes numberSpin {
+    0% {
+        transform: scale(0) rotateZ(-360deg);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.1) rotateZ(15deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotateZ(0deg);
+    }
+}
+
+/* 4) Bounce */
+.number-style-bounce {
+    animation-name: numberBounce;
+}
+@keyframes numberBounce {
+    0%   { transform: translateY(-80px); opacity: 0; }
+    60%  { transform: translateY(10px); opacity: 1; }
+    80%  { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+}
+
+/* 5) Zoom-fade */
+.number-style-zoomfade {
+    animation-name: numberZoomFade;
+}
+@keyframes numberZoomFade {
+    0%   { transform: scale(2.4); opacity: 0; filter: blur(4px); }
+    60%  { transform: scale(0.95); opacity: 1; filter: blur(0); }
+    100% { transform: scale(1); }
 }
 
 /* Controls */
@@ -149,9 +225,9 @@ body {
     border: none;
     cursor: pointer;
     margin: 8px;
-    background: #64ffda;
-    color: #000;
-    box-shadow: 0 0 8px #64ffda, 0 0 20px #00bcd4;
+    background: var(--button-bg);
+    color: var(--button-text);
+    box-shadow: 0 0 8px var(--button-shadow-main), 0 0 20px var(--button-shadow-secondary);
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
     animation: buttonPulse 2.8s ease-in-out infinite alternate;
 }
@@ -159,22 +235,22 @@ body {
 @keyframes buttonPulse {
     from {
         transform: translateY(0) scale(1);
-        box-shadow: 0 0 8px #64ffda, 0 0 20px #00bcd4;
+        box-shadow: 0 0 8px var(--button-shadow-main), 0 0 20px var(--button-shadow-secondary);
     }
     to {
         transform: translateY(-1px) scale(1.03);
-        box-shadow: 0 0 14px #64ffda, 0 0 28px #00bcd4;
+        box-shadow: 0 0 14px var(--button-shadow-main), 0 0 28px var(--button-shadow-secondary);
     }
 }
 
 .bingo-controls button:hover:not(:disabled) {
     transform: translateY(-1px) scale(1.06);
-    background: #00bcd4;
+    background: var(--secondary-accent);
 }
 
 .bingo-controls button:active:not(:disabled) {
     transform: translateY(1px) scale(0.97);
-    box-shadow: 0 0 4px #64ffda, 0 0 10px #00bcd4;
+    box-shadow: 0 0 4px var(--button-shadow-main), 0 0 10px var(--button-shadow-secondary);
 }
 
 .bingo-controls button:disabled {
@@ -184,10 +260,33 @@ body {
     animation: none;
 }
 
+/* Theme selector */
+.theme-controls {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95em;
+}
+
+.theme-controls label {
+    opacity: 0.9;
+}
+
+.theme-controls select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    font-family: inherit;
+}
+
 /* History */
 #history-title {
     font-size: 1.3em;
-    color: #64ffda;
+    color: var(--primary-accent);
     margin-top: 24px;
 }
 
@@ -195,7 +294,7 @@ body {
     margin-top: 10px;
 }
 
-/* Bubbles */
+/* Bubbles base */
 .bubble {
     display: inline-flex;
     align-items: center;
@@ -204,26 +303,11 @@ body {
     height: 56px;
     margin: 5px;
     border-radius: 50%;
-    border: 2px solid #64ffda;
-    background: rgba(0,0,0,0.7);
-    box-shadow: 0 0 10px #64ffda, 0 0 20px #00bcd4;
-    animation: bubbleIn 0.35s ease-out both;
-}
-
-@keyframes bubbleIn {
-    0% {
-        transform: scale(0.1) translateY(10px);
-        opacity: 0;
-        filter: blur(3px);
-    }
-    70% {
-        transform: scale(1.08) translateY(0);
-        opacity: 1;
-        filter: blur(0);
-    }
-    100% {
-        transform: scale(1) translateY(0);
-    }
+    border: 2px solid var(--primary-accent);
+    background: var(--bubble-bg);
+    box-shadow: 0 0 10px var(--primary-accent), 0 0 20px var(--secondary-accent);
+    animation-duration: 0.35s;
+    animation-fill-mode: both;
 }
 
 .bubble-number {
@@ -231,12 +315,51 @@ body {
     font-weight: 700;
 }
 
+/* Bubble animation variants */
+/* 1) Pop */
+.bubble-style-pop {
+    animation-name: bubbleIn;
+}
+@keyframes bubbleIn {
+    0% { transform: scale(0.1) translateY(10px); opacity: 0; filter: blur(3px); }
+    70% { transform: scale(1.08) translateY(0); opacity: 1; filter: blur(0); }
+    100% { transform: scale(1) translateY(0); }
+}
+
+/* 2) Fade */
+.bubble-style-fade {
+    animation-name: bubbleFade;
+}
+@keyframes bubbleFade {
+    0% { opacity: 0; transform: scale(0.5); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* 3) Rise */
+.bubble-style-rise {
+    animation-name: bubbleRise;
+}
+@keyframes bubbleRise {
+    0% { transform: translateY(12px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* 4) Scale pulse */
+.bubble-style-pulse {
+    animation-name: bubblePulse;
+}
+@keyframes bubblePulse {
+    0%   { transform: scale(0.4); opacity: 0; }
+    60%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
 /* Footer */
 footer {
     text-align: center;
     padding: 15px 0;
-    color: #64ffda;
-    text-shadow: 0 0 8px #00bcd4;
+    color: var(--primary-accent);
+    text-shadow: 0 0 8px var(--secondary-accent);
 }
 </style>
 </head>
@@ -249,8 +372,8 @@ footer {
     <div class="hero-content">
         <h1>Bingo Number Caller</h1>
         <p>
-            Use this screen to call numbers for your game.  
-            Click “Next number” whenever you’re ready for the room to see a new one.
+            Use this screen to call numbers for your game.<br>
+            Click “Next number” when you’re ready for everyone to see a new one.
         </p>
     </div>
 
@@ -258,7 +381,7 @@ footer {
 
         <h2 class="bingo-title">Ready when you are</h2>
         <p class="bingo-subtitle">
-            Nothing fancy here: just fair, random numbers from 1 to 75.
+            Just fair, random numbers from 1 to 75. No repeats, no cheating.
         </p>
 
         <!-- Current number -->
@@ -274,6 +397,13 @@ footer {
             <button id="projector-btn" type="button">Open big-screen view</button>
         </div>
 
+        <!-- Theme controls -->
+        <div class="theme-controls">
+            <label for="theme-select">Theme:</label>
+            <select id="theme-select"></select>
+            <button id="preview-theme-btn" type="button">Preview</button>
+        </div>
+
         <!-- History -->
         <h3 id="history-title">Numbers so far</h3>
         <div id="history"></div>
@@ -286,21 +416,419 @@ footer {
 <script>
 const TOTAL_NUMBERS = 75;
 
-const numberEl     = document.getElementById("number");
-const historyEl    = document.getElementById("history");
-const drawBtn      = document.getElementById("draw-btn");
-const resetBtn     = document.getElementById("reset-btn");
-const projectorBtn = document.getElementById("projector-btn");
+const numberEl        = document.getElementById("number");
+const historyEl       = document.getElementById("history");
+const drawBtn         = document.getElementById("draw-btn");
+const resetBtn        = document.getElementById("reset-btn");
+const projectorBtn    = document.getElementById("projector-btn");
+const themeSelect     = document.getElementById("theme-select");
+const previewThemeBtn = document.getElementById("preview-theme-btn");
 
 let remaining = [];
 let history   = [];
 let projectorWindow = null;
+let currentThemeIndex = 0;
+let currentNumberAnimClass = "number-style-pop";
+let currentBubbleAnimClass = "bubble-style-pop";
 
-function init() {
+/* 20 THEMES */
+const themes = [
+    {
+        name: "Classic Neon (Default)",
+        vars: {
+            "--bg-gradient": "linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4)",
+            "--primary-accent": "#64ffda",
+            "--secondary-accent": "#00bcd4",
+            "--card-bg": "rgba(0,0,0,0.35)",
+            "--bubble-bg": "rgba(0,0,0,0.7)",
+            "--main-text-color": "#e0e0e0",
+            "--button-bg": "#64ffda",
+            "--button-text": "#000000",
+            "--button-shadow-main": "#64ffda",
+            "--button-shadow-secondary": "#00bcd4"
+        },
+        numberAnim: "number-style-pop",
+        bubbleAnim: "bubble-style-pop"
+    },
+    {
+        name: "Deep Space",
+        vars: {
+            "--bg-gradient": "radial-gradient(circle at top, #bb86fc, #121212 60%)",
+            "--primary-accent": "#bb86fc",
+            "--secondary-accent": "#03dac5",
+            "--card-bg": "rgba(18,18,18,0.85)",
+            "--bubble-bg": "rgba(0,0,0,0.8)",
+            "--main-text-color": "#f5f5f5",
+            "--button-bg": "#bb86fc",
+            "--button-text": "#000000",
+            "--button-shadow-main": "#bb86fc",
+            "--button-shadow-secondary": "#03dac5"
+        },
+        numberAnim: "number-style-slide",
+        bubbleAnim: "bubble-style-rise"
+    },
+    {
+        name: "Sunset Glow",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #ff9a9e, #fecfef, #fe99c0)",
+            "--primary-accent": "#ff9a9e",
+            "--secondary-accent": "#ffc371",
+            "--card-bg": "rgba(0,0,0,0.25)",
+            "--bubble-bg": "rgba(255,255,255,0.1)",
+            "--main-text-color": "#fff4f4",
+            "--button-bg": "#ffc371",
+            "--button-text": "#4a2c2c",
+            "--button-shadow-main": "#ffc371",
+            "--button-shadow-secondary": "#ff9a9e"
+        },
+        numberAnim: "number-style-bounce",
+        bubbleAnim: "bubble-style-fade"
+    },
+    {
+        name: "Matrix Green",
+        vars: {
+            "--bg-gradient": "linear-gradient(160deg, #000000, #003300, #001a00)",
+            "--primary-accent": "#00ff6a",
+            "--secondary-accent": "#00b34d",
+            "--card-bg": "rgba(0,0,0,0.7)",
+            "--bubble-bg": "rgba(0,0,0,0.85)",
+            "--main-text-color": "#c8ffc8",
+            "--button-bg": "#00ff6a",
+            "--button-text": "#001a00",
+            "--button-shadow-main": "#00ff6a",
+            "--button-shadow-secondary": "#00b34d"
+        },
+        numberAnim: "number-style-zoomfade",
+        bubbleAnim: "bubble-style-pop"
+    },
+    {
+        name: "Ocean Breeze",
+        vars: {
+            "--bg-gradient": "linear-gradient(120deg, #00c6ff, #0072ff)",
+            "--primary-accent": "#a7ffeb",
+            "--secondary-accent": "#18ffff",
+            "--card-bg": "rgba(0, 30, 60, 0.6)",
+            "--bubble-bg": "rgba(0,0,0,0.5)",
+            "--main-text-color": "#e0f7fa",
+            "--button-bg": "#18ffff",
+            "--button-text": "#004d40",
+            "--button-shadow-main": "#18ffff",
+            "--button-shadow-secondary": "#00c6ff"
+        },
+        numberAnim: "number-style-slide",
+        bubbleAnim: "bubble-style-pulse"
+    },
+    {
+        name: "Warm Ember",
+        vars: {
+            "--bg-gradient": "linear-gradient(140deg, #3e2723, #bf360c, #ff7043)",
+            "--primary-accent": "#ffab91",
+            "--secondary-accent": "#ffcc80",
+            "--card-bg": "rgba(25, 13, 10, 0.8)",
+            "--bubble-bg": "rgba(0,0,0,0.7)",
+            "--main-text-color": "#ffe0b2",
+            "--button-bg": "#ff7043",
+            "--button-text": "#3e2723",
+            "--button-shadow-main": "#ff7043",
+            "--button-shadow-secondary": "#ffab91"
+        },
+        numberAnim: "number-style-pop",
+        bubbleAnim: "bubble-style-rise"
+    },
+    {
+        name: "Retro Arcade",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #000000, #1a1a40, #4a148c)",
+            "--primary-accent": "#ffea00",
+            "--secondary-accent": "#ff4081",
+            "--card-bg": "rgba(0,0,0,0.8)",
+            "--bubble-bg": "rgba(10,10,30,0.9)",
+            "--main-text-color": "#f5f5f5",
+            "--button-bg": "#ffea00",
+            "--button-text": "#1a1a40",
+            "--button-shadow-main": "#ffea00",
+            "--button-shadow-secondary": "#ff4081"
+        },
+        numberAnim: "number-style-spin",
+        bubbleAnim: "bubble-style-pop"
+    },
+    {
+        name: "Soft Pastel",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #b3ffe2, #f3e5f5, #bbdefb)",
+            "--primary-accent": "#7e57c2",
+            "--secondary-accent": "#26a69a",
+            "--card-bg": "rgba(255,255,255,0.4)",
+            "--bubble-bg": "rgba(255,255,255,0.7)",
+            "--main-text-color": "#263238",
+            "--button-bg": "#7e57c2",
+            "--button-text": "#ffffff",
+            "--button-shadow-main": "#7e57c2",
+            "--button-shadow-secondary": "#26a69a"
+        },
+        numberAnim: "number-style-bounce",
+        bubbleAnim: "bubble-style-fade"
+    },
+    {
+        name: "Ice & Steel",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
+            "--primary-accent": "#81d4fa",
+            "--secondary-accent": "#b3e5fc",
+            "--card-bg": "rgba(0,0,0,0.65)",
+            "--bubble-bg": "rgba(0,0,0,0.8)",
+            "--main-text-color": "#e1f5fe",
+            "--button-bg": "#81d4fa",
+            "--button-text": "#0f2027",
+            "--button-shadow-main": "#81d4fa",
+            "--button-shadow-secondary": "#4fc3f7"
+        },
+        numberAnim: "number-style-slide",
+        bubbleAnim: "bubble-style-rise"
+    },
+    {
+        name: "Royal Purple",
+        vars: {
+            "--bg-gradient": "linear-gradient(145deg, #4a148c, #7b1fa2, #ce93d8)",
+            "--primary-accent": "#e1bee7",
+            "--secondary-accent": "#ff80ab",
+            "--card-bg": "rgba(26,0,51,0.8)",
+            "--bubble-bg": "rgba(0,0,0,0.7)",
+            "--main-text-color": "#f3e5f5",
+            "--button-bg": "#ff80ab",
+            "--button-text": "#4a148c",
+            "--button-shadow-main": "#ff80ab",
+            "--button-shadow-secondary": "#e1bee7"
+        },
+        numberAnim: "number-style-zoomfade",
+        bubbleAnim: "bubble-style-pulse"
+    },
+    {
+        name: "Forest Mist",
+        vars: {
+            "--bg-gradient": "linear-gradient(155deg, #004d40, #1b5e20, #a5d6a7)",
+            "--primary-accent": "#c5e1a5",
+            "--secondary-accent": "#80cbc4",
+            "--card-bg": "rgba(0,20,10,0.75)",
+            "--bubble-bg": "rgba(0,0,0,0.7)",
+            "--main-text-color": "#e8f5e9",
+            "--button-bg": "#a5d6a7",
+            "--button-text": "#1b5e20",
+            "--button-shadow-main": "#a5d6a7",
+            "--button-shadow-secondary": "#80cbc4"
+        },
+        numberAnim: "number-style-pop",
+        bubbleAnim: "bubble-style-fade"
+    },
+    {
+        name: "Candy Crush",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #ff6f91, #ff9671, #ffc75f, #f9f871)",
+            "--primary-accent": "#ff6f91",
+            "--secondary-accent": "#ff9671",
+            "--card-bg": "rgba(255,255,255,0.2)",
+            "--bubble-bg": "rgba(255,255,255,0.85)",
+            "--main-text-color": "#4e342e",
+            "--button-bg": "#ff9671",
+            "--button-text": "#4e342e",
+            "--button-shadow-main": "#ff6f91",
+            "--button-shadow-secondary": "#ffc75f"
+        },
+        numberAnim: "number-style-spin",
+        bubbleAnim: "bubble-style-pop"
+    },
+    {
+        name: "Monochrome Glow",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #000000, #424242, #bdbdbd)",
+            "--primary-accent": "#ffffff",
+            "--secondary-accent": "#bdbdbd",
+            "--card-bg": "rgba(0,0,0,0.75)",
+            "--bubble-bg": "rgba(33,33,33,0.9)",
+            "--main-text-color": "#eeeeee",
+            "--button-bg": "#ffffff",
+            "--button-text": "#000000",
+            "--button-shadow-main": "#ffffff",
+            "--button-shadow-secondary": "#bdbdbd"
+        },
+        numberAnim: "number-style-slide",
+        bubbleAnim: "bubble-style-rise"
+    },
+    {
+        name: "Tropical Night",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #0f2027, #2c5364, #00b894)",
+            "--primary-accent": "#00e676",
+            "--secondary-accent": "#18ffff",
+            "--card-bg": "rgba(0,0,0,0.7)",
+            "--bubble-bg": "rgba(0,0,0,0.8)",
+            "--main-text-color": "#e0f2f1",
+            "--button-bg": "#00e676",
+            "--button-text": "#004d40",
+            "--button-shadow-main": "#00e676",
+            "--button-shadow-secondary": "#18ffff"
+        },
+        numberAnim: "number-style-bounce",
+        bubbleAnim: "bubble-style-pulse"
+    },
+    {
+        name: "Cyber Red",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #000000, #b71c1c, #ff1744)",
+            "--primary-accent": "#ff5252",
+            "--secondary-accent": "#ff8a80",
+            "--card-bg": "rgba(0,0,0,0.8)",
+            "--bubble-bg": "rgba(0,0,0,0.9)",
+            "--main-text-color": "#ffebee",
+            "--button-bg": "#ff5252",
+            "--button-text": "#000000",
+            "--button-shadow-main": "#ff5252",
+            "--button-shadow-secondary": "#ff8a80"
+        },
+        numberAnim: "number-style-zoomfade",
+        bubbleAnim: "bubble-style-pop"
+    },
+    {
+        name: "Lavender Dream",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #b39ddb, #ce93d8, #f3e5f5)",
+            "--primary-accent": "#7e57c2",
+            "--secondary-accent": "#ba68c8",
+            "--card-bg": "rgba(255,255,255,0.5)",
+            "--bubble-bg": "rgba(255,255,255,0.8)",
+            "--main-text-color": "#4a148c",
+            "--button-bg": "#ba68c8",
+            "--button-text": "#ffffff",
+            "--button-shadow-main": "#ba68c8",
+            "--button-shadow-secondary": "#7e57c2"
+        },
+        numberAnim: "number-style-pop",
+        bubbleAnim: "bubble-style-fade"
+    },
+    {
+        name: "Midnight Blue",
+        vars: {
+            "--bg-gradient": "linear-gradient(160deg, #0d47a1, #1a237e, #00051a)",
+            "--primary-accent": "#82b1ff",
+            "--secondary-accent": "#40c4ff",
+            "--card-bg": "rgba(0,0,40,0.7)",
+            "--bubble-bg": "rgba(0,0,0,0.8)",
+            "--main-text-color": "#e3f2fd",
+            "--button-bg": "#40c4ff",
+            "--button-text": "#0d47a1",
+            "--button-shadow-main": "#40c4ff",
+            "--button-shadow-secondary": "#82b1ff"
+        },
+        numberAnim: "number-style-slide",
+        bubbleAnim: "bubble-style-rise"
+    },
+    {
+        name: "Gold Lux",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #3e2723, #5d4037, #ffca28)",
+            "--primary-accent": "#ffca28",
+            "--secondary-accent": "#ffe082",
+            "--card-bg": "rgba(33, 20, 10, 0.9)",
+            "--bubble-bg": "rgba(0,0,0,0.8)",
+            "--main-text-color": "#fff8e1",
+            "--button-bg": "#ffca28",
+            "--button-text": "#3e2723",
+            "--button-shadow-main": "#ffca28",
+            "--button-shadow-secondary": "#ffe082"
+        },
+        numberAnim: "number-style-spin",
+        bubbleAnim: "bubble-style-pulse"
+    },
+    {
+        name: "Mint Fresh",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #a8ff78, #78ffd6)",
+            "--primary-accent": "#00bfa5",
+            "--secondary-accent": "#1de9b6",
+            "--card-bg": "rgba(255,255,255,0.3)",
+            "--bubble-bg": "rgba(255,255,255,0.8)",
+            "--main-text-color": "#004d40",
+            "--button-bg": "#1de9b6",
+            "--button-text": "#004d40",
+            "--button-shadow-main": "#1de9b6",
+            "--button-shadow-secondary": "#00bfa5"
+        },
+        numberAnim: "number-style-bounce",
+        bubbleAnim: "bubble-style-pop"
+    },
+    {
+        name: "Grayscale Minimal",
+        vars: {
+            "--bg-gradient": "linear-gradient(135deg, #212121, #424242, #616161)",
+            "--primary-accent": "#f5f5f5",
+            "--secondary-accent": "#bdbdbd",
+            "--card-bg": "rgba(0,0,0,0.75)",
+            "--bubble-bg": "rgba(33,33,33,0.9)",
+            "--main-text-color": "#eeeeee",
+            "--button-bg": "#f5f5f5",
+            "--button-text": "#212121",
+            "--button-shadow-main": "#f5f5f5",
+            "--button-shadow-secondary": "#bdbdbd"
+        },
+        numberAnim: "number-style-zoomfade",
+        bubbleAnim: "bubble-style-fade"
+    }
+];
+
+/* Helper to apply theme vars to a document (main + projector) */
+function applyThemeToDocument(doc, theme) {
+    const rootStyle = doc.documentElement.style;
+    Object.entries(theme.vars).forEach(([key, value]) => {
+        rootStyle.setProperty(key, value);
+    });
+}
+
+/* Set theme by index */
+function setTheme(index) {
+    const theme = themes[index] || themes[0];
+    currentThemeIndex = index;
+    currentNumberAnimClass = theme.numberAnim;
+    currentBubbleAnimClass = theme.bubbleAnim;
+
+    // main document
+    applyThemeToDocument(document, theme);
+
+    // projector (if open)
+    if (projectorWindow && !projectorWindow.closed) {
+        applyThemeToDocument(projectorWindow.document, theme);
+        // also re-style current number
+        if (history.length > 0) {
+            updateProjector(history[history.length - 1]);
+        } else {
+            updateProjector(null);
+        }
+    }
+
+    // refresh number/bubbles visually with new animation classes
+    if (history.length > 0) {
+        updateDisplay(history[history.length - 1]);
+    } else {
+        numberEl.textContent = "--";
+    }
+}
+
+/* Init theme dropdown */
+function initThemeSelect() {
+    themes.forEach((t, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = t.name;
+        themeSelect.appendChild(opt);
+    });
+    themeSelect.value = "0";
+}
+
+/* Game logic */
+function initGame() {
     remaining = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
     history   = [];
     numberEl.textContent = "--";
-    numberEl.classList.remove("number-animate");
+    numberEl.className = ""; // reset classes
     historyEl.innerHTML = "";
     drawBtn.disabled = false;
     updateProjector(null);
@@ -320,16 +848,16 @@ function drawNumber() {
 
 function updateDisplay(num) {
     // re-trigger animation on big number
-    numberEl.classList.remove("number-animate");
+    numberEl.classList.remove("number-animated", currentNumberAnimClass);
     void numberEl.offsetWidth; // force reflow
     numberEl.textContent = num;
-    numberEl.classList.add("number-animate");
+    numberEl.classList.add("number-animated", currentNumberAnimClass);
 
     // rebuild history with cascade animation
     historyEl.innerHTML = "";
     history.forEach((n, index) => {
         const bubble = document.createElement("div");
-        bubble.className = "bubble";
+        bubble.className = "bubble " + currentBubbleAnimClass;
         bubble.style.animationDelay = (index * 0.02) + "s";
 
         const numberSpan = document.createElement("div");
@@ -343,9 +871,8 @@ function updateDisplay(num) {
     updateProjector(num);
 }
 
-// PROJECTOR WINDOW SETUP
+/* PROJECTOR WINDOW */
 function openProjector() {
-    // If not open or already closed, open a new one
     if (!projectorWindow || projectorWindow.closed) {
         projectorWindow = window.open("", "bingo_projector", "width=800,height=600");
         if (!projectorWindow) {
@@ -363,6 +890,11 @@ function openProjector() {
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
                 <style>
+                    :root {
+                        --bg-gradient: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
+                        --primary-accent: #64ffda;
+                        --secondary-accent: #00bcd4;
+                    }
                     * { box-sizing: border-box; margin: 0; padding: 0; }
                     html, body {
                         margin: 0;
@@ -374,7 +906,7 @@ function openProjector() {
                     .background {
                         position: fixed;
                         inset: 0;
-                        background: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
+                        background: var(--bg-gradient);
                         background-size: 400% 400%;
                         animation: gradientBG 10s ease infinite;
                         z-index: -1;
@@ -397,22 +929,17 @@ function openProjector() {
                     }
                     .label {
                         font-size: 3vw;
-                        min-font-size: 20px;
-                        text-shadow: 0 0 10px #64ffda, 0 0 20px #00bcd4;
+                        text-shadow: 0 0 10px var(--primary-accent), 0 0 20px var(--secondary-accent);
                         margin-bottom: 1rem;
                     }
                     #projector-number {
                         font-size: 20vw;
                         line-height: 1;
-                        text-shadow: 0 0 30px #64ffda, 0 0 60px #00bcd4;
+                        text-shadow: 0 0 30px var(--primary-accent), 0 0 60px var(--secondary-accent);
                     }
                     @media (max-width: 700px) {
-                        .label {
-                            font-size: 5vw;
-                        }
-                        #projector-number {
-                            font-size: 30vw;
-                        }
+                        .label { font-size: 5vw; }
+                        #projector-number { font-size: 30vw; }
                     }
                 </style>
             </head>
@@ -426,13 +953,26 @@ function openProjector() {
             </html>
         `);
         projectorWindow.document.close();
-    }
 
-    // Sync current state
-    if (history.length > 0) {
-        updateProjector(history[history.length - 1]);
+        // apply current theme to projector window
+        setTimeout(() => {
+            const theme = themes[currentThemeIndex] || themes[0];
+            applyThemeToDocument(projectorWindow.document, theme);
+            if (history.length > 0) {
+                updateProjector(history[history.length - 1]);
+            } else {
+                updateProjector(null);
+            }
+        }, 50);
     } else {
-        updateProjector(null);
+        // if already open, just sync content and theme
+        const theme = themes[currentThemeIndex] || themes[0];
+        applyThemeToDocument(projectorWindow.document, theme);
+        if (history.length > 0) {
+            updateProjector(history[history.length - 1]);
+        } else {
+            updateProjector(null);
+        }
     }
 }
 
@@ -450,17 +990,24 @@ function updateProjector(num) {
     }
 }
 
-// EVENTS
+/* EVENT LISTENERS */
 drawBtn.addEventListener("click", drawNumber);
 
 resetBtn.addEventListener("click", () => {
-    init();
+    initGame();
 });
 
 projectorBtn.addEventListener("click", openProjector);
 
-// Init on load
-init();
+previewThemeBtn.addEventListener("click", () => {
+    const idx = parseInt(themeSelect.value, 10) || 0;
+    setTheme(idx);
+});
+
+/* INIT */
+initThemeSelect();
+setTheme(0);      // default theme (your original)
+initGame();
 </script>
 
 </body>
