@@ -26,6 +26,15 @@
     --button-shadow-secondary: #00bcd4;
 }
 
+/* Smooth fade when theme changes */
+.theme-fade {
+    animation: themeFade 0.55s ease-in-out;
+}
+@keyframes themeFade {
+    from { opacity: 0; filter: blur(2px); }
+    to   { opacity: 1; filter: blur(0); }
+}
+
 body {
     font-family: 'Roboto Condensed', sans-serif;
     color: var(--main-text-color);
@@ -49,36 +58,13 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* THEME OVERLAY (asteroids, snow, etc.) */
+/* THEME OVERLAY (snow, fireflies, confetti, etc.) */
 #theme-overlay {
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
-}
-
-/* Asteroids */
-.asteroid {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #eee, #888, #222);
-    box-shadow: 0 0 10px rgba(255,255,255,0.1);
-    opacity: 0.9;
-    --asteroid-scale: 1;
-    animation-name: asteroidDrift;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-@keyframes asteroidDrift {
-    0% {
-        transform: translate3d(120vw, 0, 0) scale(var(--asteroid-scale)) rotate(0deg);
-    }
-    100% {
-        transform: translate3d(-40vw, 0, 0) scale(var(--asteroid-scale)) rotate(360deg);
-    }
 }
 
 /* Snow */
@@ -103,33 +89,6 @@ body {
     }
     100% {
         transform: translate3d(0, 110vh, 0);
-        opacity: 0;
-    }
-}
-
-/* Bubbles */
-.bubble-fx {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.6);
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0));
-    opacity: 0.9;
-    animation-name: bubbleRiseFX;
-    animation-timing-function: ease-out;
-    animation-iteration-count: infinite;
-}
-@keyframes bubbleRiseFX {
-    0% {
-        transform: translate3d(0, 110vh, 0) scale(0.5);
-        opacity: 0;
-    }
-    20% {
-        opacity: 1;
-    }
-    100% {
-        transform: translate3d(0, -20vh, 0) scale(1.1);
         opacity: 0;
     }
 }
@@ -405,27 +364,34 @@ body {
     animation: none;
 }
 
-/* Theme selector */
+/* Theme selector - styled */
 .theme-controls {
     margin-top: 20px;
-    display: flex;
-    flex-wrap: wrap;
+    display: inline-flex;
     gap: 10px;
     align-items: center;
     justify-content: center;
-    font-size: 0.95em;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.45);
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 
 .theme-controls label {
     opacity: 0.9;
+    font-size: 0.95em;
 }
 
 .theme-controls select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: none;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--primary-accent);
+    background: rgba(0,0,0,0.7);
+    color: var(--main-text-color);
     outline: none;
     font-family: inherit;
+    font-size: 0.95em;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
 }
 
 /* History */
@@ -439,7 +405,7 @@ body {
     margin-top: 10px;
 }
 
-/* Bubbles (history circles) */
+/* History bubbles */
 .bubble {
     display: inline-flex;
     align-items: center;
@@ -461,7 +427,6 @@ body {
 }
 
 /* Bubble animation variants */
-/* 1) Pop */
 .bubble-style-pop {
     animation-name: bubbleIn;
 }
@@ -471,7 +436,6 @@ body {
     100% { transform: scale(1) translateY(0); }
 }
 
-/* 2) Fade */
 .bubble-style-fade {
     animation-name: bubbleFade;
 }
@@ -480,7 +444,6 @@ body {
     100% { opacity: 1; transform: scale(1); }
 }
 
-/* 3) Rise */
 .bubble-style-rise {
     animation-name: bubbleRise;
 }
@@ -489,7 +452,6 @@ body {
     100% { transform: translateY(0); opacity: 1; }
 }
 
-/* 4) Scale pulse */
 .bubble-style-pulse {
     animation-name: bubblePulse;
 }
@@ -547,7 +509,6 @@ footer {
         <div class="theme-controls">
             <label for="theme-select">Theme:</label>
             <select id="theme-select"></select>
-            <button id="preview-theme-btn" type="button">Preview</button>
         </div>
 
         <!-- History -->
@@ -558,18 +519,16 @@ footer {
 </div>
 
 <footer>Have fun, and good luck to everyone playing ✨</footer>
-
 <script>
 const TOTAL_NUMBERS = 75;
 
-const numberEl        = document.getElementById("number");
-const historyEl       = document.getElementById("history");
-const drawBtn         = document.getElementById("draw-btn");
-const resetBtn        = document.getElementById("reset-btn");
-const projectorBtn    = document.getElementById("projector-btn");
-const themeSelect     = document.getElementById("theme-select");
-const previewThemeBtn = document.getElementById("preview-theme-btn");
-const overlayMain     = document.getElementById("theme-overlay");
+const numberEl     = document.getElementById("number");
+const historyEl    = document.getElementById("history");
+const drawBtn      = document.getElementById("draw-btn");
+const resetBtn     = document.getElementById("reset-btn");
+const projectorBtn = document.getElementById("projector-btn");
+const themeSelect  = document.getElementById("theme-select");
+const overlayMain  = document.getElementById("theme-overlay");
 
 let remaining = [];
 let history   = [];
@@ -579,7 +538,7 @@ let currentNumberAnimClass = "number-style-pop";
 let currentBubbleAnimClass = "bubble-style-pop";
 let currentOverlayType = "none";
 
-/* THEMES with overlays & animations */
+/* THEMES (Asteroid + Deep Sea removed) */
 const themes = [
     {
         name: "Classic Neon (Default)",
@@ -600,24 +559,6 @@ const themes = [
         bubbleAnim: "bubble-style-pop"
     },
     {
-        name: "Asteroid Field",
-        overlay: "asteroids",
-        vars: {
-            "--bg-gradient": "radial-gradient(circle at top, #000018, #000000 60%)",
-            "--primary-accent": "#b3e5fc",
-            "--secondary-accent": "#90caf9",
-            "--card-bg": "rgba(5,5,25,0.9)",
-            "--bubble-bg": "rgba(0,0,0,0.9)",
-            "--main-text-color": "#e3f2fd",
-            "--button-bg": "#90caf9",
-            "--button-text": "#000018",
-            "--button-shadow-main": "#90caf9",
-            "--button-shadow-secondary": "#b3e5fc"
-        },
-        numberAnim: "number-style-zoomfade",
-        bubbleAnim: "bubble-style-rise"
-    },
-    {
         name: "Snowy Night",
         overlay: "snow",
         vars: {
@@ -634,24 +575,6 @@ const themes = [
         },
         numberAnim: "number-style-slide",
         bubbleAnim: "bubble-style-fade"
-    },
-    {
-        name: "Deep Sea Bubbles",
-        overlay: "bubbles",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #001f3f, #003f5c, #2f4b7c)",
-            "--primary-accent": "#4dd0e1",
-            "--secondary-accent": "#80deea",
-            "--card-bg": "rgba(0, 10, 30, 0.8)",
-            "--bubble-bg": "rgba(0,0,0,0.7)",
-            "--main-text-color": "#e0f7fa",
-            "--button-bg": "#4dd0e1",
-            "--button-text": "#001f3f",
-            "--button-shadow-main": "#4dd0e1",
-            "--button-shadow-secondary": "#80deea"
-        },
-        numberAnim: "number-style-bounce",
-        bubbleAnim: "bubble-style-pulse"
     },
     {
         name: "Firefly Meadow",
@@ -691,7 +614,7 @@ const themes = [
     }
 ];
 
-/* Helpers to apply theme vars */
+/* Helper to apply theme vars to a document (main + projector) */
 function applyThemeToDocument(doc, theme) {
     const rootStyle = doc.documentElement.style;
     Object.entries(theme.vars).forEach(([key, value]) => {
@@ -699,7 +622,7 @@ function applyThemeToDocument(doc, theme) {
     });
 }
 
-/* Overlay builder (main + projector) */
+/* Build overlay in a given document based on type */
 function buildOverlay(doc, type) {
     const overlay = doc.getElementById("theme-overlay");
     if (!overlay) return;
@@ -709,9 +632,7 @@ function buildOverlay(doc, type) {
 
     const count = (cls) => {
         switch (cls) {
-            case "asteroids": return 18;
             case "snow": return 80;
-            case "bubbles": return 30;
             case "fireflies": return 25;
             case "confetti": return 60;
             default: return 0;
@@ -721,26 +642,12 @@ function buildOverlay(doc, type) {
     const total = count(type);
 
     for (let i = 0; i < total; i++) {
-        let el = doc.createElement("div");
-        if (type === "asteroids") {
-            el.className = "asteroid";
-            el.style.top = (Math.random() * 100) + "%";
-            el.style.left = (Math.random() * 100) + "%";
-            el.style.setProperty("--asteroid-scale", (0.4 + Math.random() * 1.4).toFixed(2));
-            el.style.animationDuration = (8 + Math.random() * 12).toFixed(1) + "s";
-            el.style.animationDelay = (-Math.random() * 20).toFixed(1) + "s";
-        } else if (type === "snow") {
+        const el = doc.createElement("div");
+        if (type === "snow") {
             el.className = "snowflake";
             el.style.left = (Math.random() * 100) + "%";
             el.style.animationDuration = (8 + Math.random() * 10).toFixed(1) + "s";
             el.style.animationDelay = (-Math.random() * 10).toFixed(1) + "s";
-        } else if (type === "bubbles") {
-            el.className = "bubble-fx";
-            el.style.left = (Math.random() * 100) + "%";
-            el.style.animationDuration = (8 + Math.random() * 10).toFixed(1) + "s";
-            el.style.animationDelay = (-Math.random() * 10).toFixed(1) + "s";
-            const scale = 0.5 + Math.random() * 1.2;
-            el.style.transform = "scale(" + scale.toFixed(2) + ")";
         } else if (type === "fireflies") {
             el.className = "firefly";
             el.style.top = (Math.random() * 100) + "%";
@@ -758,7 +665,7 @@ function buildOverlay(doc, type) {
     }
 }
 
-/* Set theme by index */
+/* Theme change with fade (main + projector) */
 function setTheme(index) {
     const theme = themes[index] || themes[0];
     currentThemeIndex = index;
@@ -766,19 +673,27 @@ function setTheme(index) {
     currentBubbleAnimClass = theme.bubbleAnim;
     currentOverlayType = theme.overlay || "none";
 
-    // main document
+    // Fade main
+    document.body.classList.remove("theme-fade");
+    void document.body.offsetWidth;
     applyThemeToDocument(document, theme);
     buildOverlay(document, currentOverlayType);
+    document.body.classList.add("theme-fade");
 
-    // projector (if open)
+    // Projector (if open)
     if (projectorWindow && !projectorWindow.closed) {
-        applyThemeToDocument(projectorWindow.document, theme);
-        buildOverlay(projectorWindow.document, currentOverlayType);
+        const pDoc = projectorWindow.document;
+        pDoc.body.classList.remove("theme-fade");
+        void pDoc.body.offsetWidth;
+        applyThemeToDocument(pDoc, theme);
+        buildOverlay(pDoc, currentOverlayType);
+        pDoc.body.classList.add("theme-fade");
+
         if (history.length > 0) updateProjector(history[history.length - 1]);
         else updateProjector(null);
     }
 
-    // refresh number/bubbles visually
+    // Refresh current number + bubbles with new styles
     if (history.length > 0) {
         updateDisplay(history[history.length - 1]);
     } else {
@@ -795,8 +710,12 @@ function initThemeSelect() {
         themeSelect.appendChild(opt);
     });
     themeSelect.value = "0";
-}
 
+    themeSelect.addEventListener("change", () => {
+        const idx = parseInt(themeSelect.value, 10) || 0;
+        setTheme(idx);
+    });
+}
 /* Game logic */
 function initGame() {
     remaining = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
@@ -882,12 +801,18 @@ function openProjector() {
                         color: #ffffff;
                         overflow: hidden;
                     }
+                    .theme-fade {
+                        animation: themeFade 0.55s ease-in-out;
+                    }
+                    @keyframes themeFade {
+                        from { opacity: 0; filter: blur(2px); }
+                        to   { opacity: 1; filter: blur(0); }
+                    }
                     .background {
                         position: fixed;
                         inset: 0;
                         background: var(--bg-gradient);
-
-background-size: 400% 400%;
+                        background-size: 400% 400%;
                         animation: gradientBG 10s ease infinite;
                         z-index: -2;
                     }
@@ -903,29 +828,6 @@ background-size: 400% 400%;
                         pointer-events: none;
                         overflow: hidden;
                     }
-                    /* Asteroids */
-                    .asteroid {
-                        position: absolute;
-                        width: 40px;
-                        height: 40px;
-                        border-radius: 50%;
-                        background: radial-gradient(circle at 30% 30%, #eee, #888, #222);
-                        box-shadow: 0 0 10px rgba(255,255,255,0.1);
-                        opacity: 0.9;
-                        --asteroid-scale: 1;
-                        animation-name: asteroidDrift;
-                        animation-timing-function: linear;
-                        animation-iteration-count: infinite;
-                    }
-                    @keyframes asteroidDrift {
-                        0% {
-                            transform: translate3d(120vw, 0, 0) scale(var(--asteroid-scale)) rotate(0deg);
-                        }
-                        100% {
-                            transform: translate3d(-40vw, 0, 0) scale(var(--asteroid-scale)) rotate(360deg);
-                        }
-                    }
-                    /* Snow */
                     .snowflake {
                         position: absolute;
                         width: 6px;
@@ -950,33 +852,6 @@ background-size: 400% 400%;
                             opacity: 0;
                         }
                     }
-                    /* Bubbles */
-                    .bubble-fx {
-                        position: absolute;
-                        width: 20px;
-                        height: 20px;
-                        border-radius: 50%;
-                        border: 1px solid rgba(255,255,255,0.6);
-                        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0));
-                        opacity: 0.9;
-                        animation-name: bubbleRiseFX;
-                        animation-timing-function: ease-out;
-                        animation-iteration-count: infinite;
-                    }
-                    @keyframes bubbleRiseFX {
-                        0% {
-                            transform: translate3d(0, 110vh, 0) scale(0.5);
-                            opacity: 0;
-                        }
-                        20% {
-                            opacity: 1;
-                        }
-                        100% {
-                            transform: translate3d(0, -20vh, 0) scale(1.1);
-                            opacity: 0;
-                        }
-                    }
-                    /* Fireflies */
                     .firefly {
                         position: absolute;
                         width: 6px;
@@ -1007,7 +882,6 @@ background-size: 400% 400%;
                             opacity: 1;
                         }
                     }
-                    /* Confetti */
                     .confetti-piece {
                         position: absolute;
                         width: 8px;
@@ -1072,7 +946,6 @@ background-size: 400% 400%;
         `);
         projectorWindow.document.close();
 
-        // apply current theme & overlay after load
         setTimeout(() => {
             const theme = themes[currentThemeIndex] || themes[0];
             applyThemeToDocument(projectorWindow.document, theme);
@@ -1081,7 +954,6 @@ background-size: 400% 400%;
             else updateProjector(null);
         }, 50);
     } else {
-        // already open: sync theme + overlay + number
         const theme = themes[currentThemeIndex] || themes[0];
         applyThemeToDocument(projectorWindow.document, theme);
         buildOverlay(projectorWindow.document, currentOverlayType);
@@ -1102,17 +974,8 @@ function updateProjector(num) {
 
 /* EVENTS */
 drawBtn.addEventListener("click", drawNumber);
-
-resetBtn.addEventListener("click", () => {
-    initGame();
-});
-
+resetBtn.addEventListener("click", () => initGame());
 projectorBtn.addEventListener("click", openProjector);
-
-previewThemeBtn.addEventListener("click", () => {
-    const idx = parseInt(themeSelect.value, 10) || 0;
-    setTheme(idx);
-});
 
 /* INIT */
 initThemeSelect();
