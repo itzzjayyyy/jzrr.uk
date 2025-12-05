@@ -58,7 +58,7 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* THEME OVERLAY (snow, fireflies, confetti, etc.) */
+/* THEME OVERLAY (snow, fireflies, confetti) */
 #theme-overlay {
     position: fixed;
     inset: 0;
@@ -364,7 +364,7 @@ body {
     animation: none;
 }
 
-/* Theme selector - styled */
+/* Theme selector - styled pill */
 .theme-controls {
     margin-top: 20px;
     display: inline-flex;
@@ -426,7 +426,7 @@ body {
     font-weight: 700;
 }
 
-/* Bubble animation variants */
+/* History bubble animations */
 .bubble-style-pop {
     animation-name: bubbleIn;
 }
@@ -479,22 +479,15 @@ footer {
 
     <div class="hero-content">
         <h1>Bingo Number Caller</h1>
-        <p>
-            Use this screen to call numbers for your game.<br>
-            Click “Next number” when you’re ready for everyone to see a new one.
-        </p>
     </div>
 
     <div class="bingo-card">
 
         <h2 class="bingo-title">Ready when you are</h2>
-        <p class="bingo-subtitle">
-            Just fair, random numbers from 1 to 75. No repeats, no cheating.
-        </p>
 
         <!-- Current number -->
         <div id="current-wrapper">
-            <div id="current-label">Current number</div>
+            <div id="current-label">Current number:</div>
             <div id="number">--</div>
         </div>
 
@@ -518,9 +511,9 @@ footer {
     </div>
 </div>
 
-<footer>Have fun, and good luck to everyone playing ✨</footer>
+<footer>Made privately for my dad 🙂‍↔️</footer>
 <script>
-const TOTAL_NUMBERS = 75;
+const TOTAL_NUMBERS = 90;
 
 const numberEl     = document.getElementById("number");
 const historyEl    = document.getElementById("history");
@@ -716,6 +709,7 @@ function initThemeSelect() {
         setTheme(idx);
     });
 }
+
 /* Game logic */
 function initGame() {
     remaining = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
@@ -761,7 +755,6 @@ function updateDisplay(num) {
 
     updateProjector(num);
 }
-
 /* PROJECTOR WINDOW */
 function openProjector() {
     if (!projectorWindow || projectorWindow.closed) {
@@ -791,7 +784,7 @@ function openProjector() {
                         --button-bg: #64ffda;
                         --button-text: #000000;
                         --button-shadow-main: #64ffda;
-                        --button-shadow-secondary: #00bcd4;
+                        --button-shadow-secondary": "#00bcd4;
                     }
                     * { box-sizing: border-box; margin: 0; padding: 0; }
                     html, body {
@@ -928,6 +921,82 @@ function openProjector() {
                         line-height: 1;
                         text-shadow: 0 0 30px var(--primary-accent), 0 0 60px var(--secondary-accent);
                     }
+
+                    /* Projector number animations */
+                    .number-animated {
+                        animation-duration: 0.6s;
+                        animation-fill-mode: both;
+                    }
+                    .number-style-pop {
+                        animation-name: projNumberPop;
+                    }
+                    @keyframes projNumberPop {
+                        0% {
+                            transform: scale(0.4) rotateX(70deg);
+                            opacity: 0;
+                            filter: blur(4px);
+                        }
+                        55% {
+                            transform: scale(1.15) rotateX(0deg);
+                            opacity: 1;
+                            filter: blur(0);
+                        }
+                        100% {
+                            transform: scale(1) rotateX(0deg);
+                        }
+                    }
+                    .number-style-slide {
+                        animation-name: projNumberSlide;
+                    }
+                    @keyframes projNumberSlide {
+                        0% {
+                            transform: translateX(-80px);
+                            opacity: 0;
+                            filter: blur(3px);
+                        }
+                        60% {
+                            transform: translateX(10px);
+                            opacity: 1;
+                            filter: blur(0);
+                        }
+                        100% {
+                            transform: translateX(0);
+                        }
+                    }
+                    .number-style-spin {
+                        animation-name: projNumberSpin;
+                    }
+                    @keyframes projNumberSpin {
+                        0% {
+                            transform: scale(0) rotateZ(-360deg);
+                            opacity: 0;
+                        }
+                        70% {
+                            transform: scale(1.1) rotateZ(15deg);
+                            opacity: 1;
+                        }
+                        100% {
+                            transform: scale(1) rotateZ(0deg);
+                        }
+                    }
+                    .number-style-bounce {
+                        animation-name: projNumberBounce;
+                    }
+                    @keyframes projNumberBounce {
+                        0%   { transform: translateY(-80px); opacity: 0; }
+                        60%  { transform: translateY(10px); opacity: 1; }
+                        80%  { transform: translateY(-6px); }
+                        100% { transform: translateY(0); }
+                    }
+                    .number-style-zoomfade {
+                        animation-name: projNumberZoomFade;
+                    }
+                    @keyframes projNumberZoomFade {
+                        0%   { transform: scale(2.4); opacity: 0; filter: blur(4px); }
+                        60%  { transform: scale(0.95); opacity: 1; filter: blur(0); }
+                        100% { transform: scale(1); }
+                    }
+
                     @media (max-width: 700px) {
                         .label { font-size: 5vw; }
                         #projector-number { font-size: 30vw; }
@@ -969,7 +1038,13 @@ function updateProjector(num) {
     const el  = doc.getElementById("projector-number");
     if (!el) return;
 
+    // remove/restart animation
+    el.classList.remove("number-animated", currentNumberAnimClass);
+    void el.offsetWidth;
+
     el.textContent = (num == null ? "--" : String(num));
+
+    el.classList.add("number-animated", currentNumberAnimClass);
 }
 
 /* EVENTS */
