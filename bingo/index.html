@@ -461,6 +461,40 @@ body {
     100% { transform: scale(1); }
 }
 
+/* Caller prompt panel (only on main screen) */
+.caller-prompt {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.7);
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    gap: 12px;
+}
+.caller-prompt.visible {
+    display: flex;
+}
+.caller-prompt img {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 0 10px rgba(0,0,0,0.6);
+}
+.caller-prompt-content {
+    text-align: left;
+}
+.caller-prompt-title {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-bottom: 4px;
+}
+.caller-prompt-text {
+    font-size: 1em;
+    font-weight: 600;
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -504,6 +538,17 @@ footer {
             <select id="theme-select"></select>
         </div>
 
+        <!-- Caller prompt panel (hidden unless enabled from dev console) -->
+        <div id="caller-prompt" class="caller-prompt">
+            <img id="caller-prompt-image" src="" alt="Prompt helper">
+            <div class="caller-prompt-content">
+                <div class="caller-prompt-title">What to say:</div>
+                <div id="caller-prompt-text" class="caller-prompt-text">
+                    Waiting for the first number…
+                </div>
+            </div>
+        </div>
+
         <!-- History -->
         <h3 id="history-title">Numbers so far:</h3>
         <div id="history"></div>
@@ -512,8 +557,10 @@ footer {
 </div>
 
 <footer>Made privately for my dad 🙂‍↔️</footer>
+
 <script>
 const TOTAL_NUMBERS = 90;
+const STORAGE_KEY = "bingoCallerState_v1";
 
 const numberEl     = document.getElementById("number");
 const historyEl    = document.getElementById("history");
@@ -523,6 +570,11 @@ const projectorBtn = document.getElementById("projector-btn");
 const themeSelect  = document.getElementById("theme-select");
 const overlayMain  = document.getElementById("theme-overlay");
 
+/* caller prompt elements */
+const callerPromptEl   = document.getElementById("caller-prompt");
+const callerPromptImg  = document.getElementById("caller-prompt-image");
+const callerPromptText = document.getElementById("caller-prompt-text");
+
 let remaining = [];
 let history   = [];
 let projectorWindow = null;
@@ -530,8 +582,103 @@ let currentThemeIndex = 0;
 let currentNumberAnimClass = "number-style-pop";
 let currentBubbleAnimClass = "bubble-style-pop";
 let currentOverlayType = "none";
+let callerPromptEnabled = false;
 
-/* THEMES (Asteroid + Deep Sea removed) */
+/* Bingo caller sheet mapping 1–90 */
+const CALLER_LINES = {
+    1: "Kelly's Eye",
+    2: "One Little Duck",
+    3: "Cup of Tea",
+    4: "Knock at the Door",
+    5: "Man Alive",
+    6: "Tom Mix, half a dozen",
+    7: "Lucky Seven",
+    8: "Garden Gate",
+    9: "Doctor's Orders",
+    10: "Starmer's Den",
+    11: "Legs Eleven",
+    12: "One Dozen",
+    13: "Unlucky for Some",
+    14: "Valentine's Day",
+    15: "Young and Keen",
+    16: "Sweet Sixteen",
+    17: "Dancing Queen",
+    18: "Coming of Age",
+    19: "Goodbye Teens",
+    20: "One Score",
+    21: "Royal Salute, key to the door",
+    22: "Two Little Ducks",
+    23: "Thee and Me",
+    24: "Two Dozen",
+    25: "Duck and Dive",
+    26: "Pick and Mix",
+    27: "Gateway to Heaven",
+    28: "In a State",
+    29: "Rise and Shine",
+    30: "Dirty Gertie",
+    31: "Get Up and Run",
+    32: "Buckle My Shoe",
+    33: "Dirty Knee, all the threes",
+    34: "Ask for More",
+    35: "Jump and Jive",
+    36: "Three Dozen",
+    37: "More than Eleven",
+    38: "Christmas Cake",
+    39: "Steps",
+    40: "Naughty Forty",
+    41: "Time for Fun",
+    42: "Winnie the Pooh",
+    43: "Down on Your Knees",
+    44: "Droopy Drawers",
+    45: "Halfway There",
+    46: "Up to Tricks",
+    47: "Four and Seven",
+    48: "Four Dozen",
+    49: "PC",
+    50: "Half a Century",
+    51: "Tweak of the Thumb",
+    52: "Weeks in a Year",
+    53: "Here Comes Herbie",
+    54: "Clean the Floor",
+    55: "Snakes Alive",
+    56: "Was She Worth It?",
+    57: "Heinz Varieties",
+    58: "Make Them Wait",
+    59: "Brighton Line",
+    60: "Five Dozen",
+    61: "Bakers Bun",
+    62: "Turn the Screw, tickety-boo",
+    63: "Tickle Me 63",
+    64: "Red Raw",
+    65: "Old Age Pension",
+    66: "Clickety Clicks",
+    67: "Made in Heaven",
+    68: "Saving Grace",
+    69: "Either Way Up",
+    70: "Three Score and Ten",
+    71: "Bang on the Drum",
+    72: "Six Dozen",
+    73: "Queen Bee",
+    74: "Candy Store, hit the floor",
+    75: "Strive and Strive",
+    76: "Trombones",
+    77: "Sunset Strip",
+    78: "Heaven's Gate, 39 more steps",
+    79: "One More Time",
+    80: "Eight and Blank",
+    81: "Stop and Run",
+    82: "Straight On Through",
+    83: "Time for Tea",
+    84: "Seven Dozen",
+    85: "Staying Alive",
+    86: "Between the Sticks",
+    87: "Torquay in Devon",
+    88: "Two Fat Ladies",
+    89: "Nearly There",
+    90: "Top of the Shop"
+};
+
+/* THEMES */
 const themes = [
     {
         name: "Classic Neon (Default)",
@@ -606,6 +753,41 @@ const themes = [
         bubbleAnim: "bubble-style-pop"
     }
 ];
+
+/* ====== PERSISTENCE HELPERS (localStorage) ====== */
+function saveState() {
+    try {
+        const state = {
+            history,
+            remaining,
+            currentThemeIndex,
+            callerPromptEnabled,
+            callerPromptImageSrc: callerPromptImg.src || ""
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+        console.error("Failed to save bingo state", e);
+    }
+}
+
+function clearState() {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+        console.error("Failed to clear bingo state", e);
+    }
+}
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        console.error("Failed to load bingo state", e);
+        return null;
+    }
+}
 
 /* Helper to apply theme vars to a document (main + projector) */
 function applyThemeToDocument(doc, theme) {
@@ -689,8 +871,10 @@ function setTheme(index) {
     // Refresh current number + bubbles with new styles
     if (history.length > 0) {
         updateDisplay(history[history.length - 1]);
+        // updateDisplay will save state
     } else {
         numberEl.textContent = "--";
+        saveState(); // theme changed, but no numbers yet
     }
 }
 
@@ -710,15 +894,53 @@ function initThemeSelect() {
     });
 }
 
+/* Caller prompt: build phrase from sheet */
+function buildCallerPromptText(num) {
+    if (!num) return "Waiting for the first number…";
+    const line = CALLER_LINES[num];
+    if (line) {
+        return `${line} – number ${num}`;
+    }
+    return `Say: “${num}”`;
+}
+
+/* Exposed functions for dev console */
+function enableCallerPrompt(imageUrl) {
+    callerPromptEnabled = true;
+    if (imageUrl) {
+        callerPromptImg.src = imageUrl;
+    }
+    callerPromptEl.classList.add("visible");
+
+    const lastNumber = history.length ? history[history.length - 1] : null;
+    callerPromptText.textContent = buildCallerPromptText(lastNumber);
+    saveState();
+}
+
+function disableCallerPrompt() {
+    callerPromptEnabled = false;
+    callerPromptEl.classList.remove("visible");
+    saveState();
+}
+
+/* Attach to window so you can call from dev console */
+window.enableCallerPrompt = enableCallerPrompt;
+window.disableCallerPrompt = disableCallerPrompt;
+
 /* Game logic */
-function initGame() {
+function initGame(clearSaved = false) {
     remaining = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
     history   = [];
     numberEl.textContent = "--";
     numberEl.className = "";
     historyEl.innerHTML = "";
     drawBtn.disabled = false;
+    callerPromptText.textContent = "Waiting for the first number…";
     updateProjector(null);
+    if (clearSaved) {
+        clearState();
+    }
+    saveState();
 }
 
 function drawNumber() {
@@ -753,8 +975,14 @@ function updateDisplay(num) {
         historyEl.appendChild(bubble);
     });
 
+    if (callerPromptEnabled) {
+        callerPromptText.textContent = buildCallerPromptText(num);
+    }
+
     updateProjector(num);
+    saveState();
 }
+
 /* PROJECTOR WINDOW */
 function openProjector() {
     if (!projectorWindow || projectorWindow.closed) {
@@ -784,7 +1012,7 @@ function openProjector() {
                         --button-bg: #64ffda;
                         --button-text: #000000;
                         --button-shadow-main: #64ffda;
-                        --button-shadow-secondary": "#00bcd4;
+                        --button-shadow-secondary: #00bcd4;
                     }
                     * { box-sizing: border-box; margin: 0; padding: 0; }
                     html, body {
@@ -921,7 +1149,6 @@ function openProjector() {
                         line-height: 1;
                         text-shadow: 0 0 30px var(--primary-accent), 0 0 60px var(--secondary-accent);
                     }
-
                     /* Projector number animations */
                     .number-animated {
                         animation-duration: 0.6s;
@@ -996,7 +1223,6 @@ function openProjector() {
                         60%  { transform: scale(0.95); opacity: 1; filter: blur(0); }
                         100% { transform: scale(1); }
                     }
-
                     @media (max-width: 700px) {
                         .label { font-size: 5vw; }
                         #projector-number { font-size: 30vw; }
@@ -1038,7 +1264,6 @@ function updateProjector(num) {
     const el  = doc.getElementById("projector-number");
     if (!el) return;
 
-    // remove/restart animation
     el.classList.remove("number-animated", currentNumberAnimClass);
     void el.offsetWidth;
 
@@ -1047,15 +1272,57 @@ function updateProjector(num) {
     el.classList.add("number-animated", currentNumberAnimClass);
 }
 
+/* BOOTSTRAP: restore from localStorage if possible */
+function bootstrap() {
+    initThemeSelect();
+
+    const stored = loadState();
+    if (stored && Array.isArray(stored.history) && Array.isArray(stored.remaining)) {
+        history = stored.history;
+        remaining = stored.remaining;
+        currentThemeIndex = stored.currentThemeIndex || 0;
+        callerPromptEnabled = !!stored.callerPromptEnabled;
+
+        if (stored.callerPromptImageSrc) {
+            callerPromptImg.src = stored.callerPromptImageSrc;
+        }
+        if (callerPromptEnabled) {
+            callerPromptEl.classList.add("visible");
+        } else {
+            callerPromptEl.classList.remove("visible");
+        }
+
+        themeSelect.value = String(currentThemeIndex);
+        setTheme(currentThemeIndex);
+
+        if (history.length === 0) {
+            numberEl.textContent = "--";
+            callerPromptText.textContent = "Waiting for the first number…";
+        } else {
+            const last = history[history.length - 1];
+            // setTheme already called updateDisplay (which updated DOM & saved)
+            if (callerPromptEnabled) {
+                callerPromptText.textContent = buildCallerPromptText(last);
+            } else {
+                callerPromptText.textContent = "Waiting for the first number…";
+            }
+        }
+
+        drawBtn.disabled = remaining.length === 0;
+    } else {
+        themeSelect.value = "0";
+        setTheme(0);
+        initGame(true); // start fresh and clear any junk state
+    }
+}
+
 /* EVENTS */
 drawBtn.addEventListener("click", drawNumber);
-resetBtn.addEventListener("click", () => initGame());
+resetBtn.addEventListener("click", () => initGame(true));
 projectorBtn.addEventListener("click", openProjector);
 
 /* INIT */
-initThemeSelect();
-setTheme(0);   // default = Classic Neon
-initGame();
+bootstrap();
 </script>
 
 </body>
