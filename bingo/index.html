@@ -696,6 +696,24 @@ const CALLER_LINES = {
 
 /* THEMES */
 const themes = [
+    // All possible number animation classes (main + projector use the same names)
+const NUMBER_ANIM_CLASSES = [
+    "number-style-pop",
+    "number-style-slide",
+    "number-style-spin",
+    "number-style-bounce",
+    "number-style-zoomfade"
+];
+
+/**
+ * Completely reset animation classes on a number element
+ * so we don't carry old theme animation classes.
+ */
+function resetNumberAnimation(el) {
+    el.classList.remove("number-animated", ...NUMBER_ANIM_CLASSES);
+    // force a reflow so the next animation always restarts
+    void el.offsetWidth;
+}
     {
         name: "Classic Neon (Default)",
         overlay: "none",
@@ -729,7 +747,8 @@ const themes = [
             "--button-shadow-main": "#bbdefb",
             "--button-shadow-secondary": "#ffffff"
         },
-        numberAnim: "number-style-slide",
+        // now uses the spin animation
+        numberAnim: "number-style-spin",
         bubbleAnim: "bubble-style-fade"
     },
     {
@@ -968,12 +987,13 @@ function drawNumber() {
 }
 
 function updateDisplay(num) {
-    numberEl.classList.remove("number-animated", currentNumberAnimClass);
-    void numberEl.offsetWidth;
+    // fully reset animation classes so theme changes don't leave old ones on
+    resetNumberAnimation(numberEl);
     numberEl.textContent = num;
     numberEl.classList.add("number-animated", currentNumberAnimClass);
 
     historyEl.innerHTML = "";
+    // ... rest stays the same
     history.forEach((n, index) => {
         const bubble = document.createElement("div");
         bubble.className = "bubble " + currentBubbleAnimClass;
@@ -1279,11 +1299,9 @@ function updateProjector(num) {
     const el  = doc.getElementById("projector-number");
     if (!el) return;
 
-    el.classList.remove("number-animated", currentNumberAnimClass);
-    void el.offsetWidth;
-
+    // same fix: clear all animation classes, then re-apply
+    resetNumberAnimation(el);
     el.textContent = (num == null ? "--" : String(num));
-
     el.classList.add("number-animated", currentNumberAnimClass);
 }
 
