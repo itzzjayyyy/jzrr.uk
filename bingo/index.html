@@ -2,1340 +2,355 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bingo Number Caller</title>
-
-<!-- Google Fonts -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bingo Caller</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
-
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#101c2e;--bg2:#0a1220;--panel:#16253b;--line:#2a3d59;--ink:#e8eef7;--muted:#7f93ad;
+  --accent:#5eead4;--accent-ink:#06201c;--ball:#2b6cb0;--ball2:#143a66;--face:#f4f7fb;--face-ink:#12243d;
+  --lit1:#2b8f86;--lit2:#2b8f86;--lit3:#2b8f86;--lit-hi:#7fe0d4;
+  --sans:'Roboto Condensed',system-ui,sans-serif;--serif:'Orbitron',system-ui,sans-serif;--sec:#00bcd4;--bubble:rgba(0,0,0,.7);--bg-gradient:linear-gradient(-45deg,#1a237e,#0d47a1,#64ffda,#00bcd4);
+}
+html{background:var(--bg2)}
+body{font-family:var(--sans);color:var(--ink);min-height:100vh;font-size:17px}
+.gradient-container{position:fixed;inset:0;z-index:-2;background:var(--bg-gradient);background-size:400% 400%;animation:gradientBG 10s ease infinite}
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+#overlay,#lights{position:fixed;left:0;right:0;pointer-events:none;overflow:hidden}
+#overlay{inset:0;z-index:0}
+#lights{top:0;height:56px;z-index:3;display:none}
+[data-theme=christmas] #lights{display:block}
+#lights svg{position:absolute;inset:0;width:100%;height:100%}
+.bulb{position:absolute;width:12px;height:18px;margin-left:-6px;border-radius:50% 50% 55% 55%;
+  animation:twinkle 2.4s ease-in-out infinite}
+.bulb::before{content:"";position:absolute;left:2px;top:-5px;width:8px;height:6px;background:#2a2a2a;border-radius:2px}
+@keyframes twinkle{0%,100%{opacity:1;filter:brightness(1.15)}50%{opacity:.55;filter:brightness(.7)}}
+.flake{position:absolute;top:-10px;border-radius:50%;background:#fff;animation:fall linear infinite}
+@keyframes fall{to{transform:translate3d(var(--dx,0),110vh,0)}}
+.fly{position:absolute;width:5px;height:5px;border-radius:50%;background:#e6f26b;box-shadow:0 0 8px #e6f26b;animation:drift ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0);opacity:.25}to{transform:translate(28px,-22px);opacity:1}}
+.conf{position:absolute;top:-20px;width:7px;height:14px;animation:fall linear infinite}
 
-/* THEME VARIABLES (default = your original) */
-:root {
-    --bg-gradient: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
-    --primary-accent: #64ffda;
-    --secondary-accent: #00bcd4;
-    --card-bg: rgba(0,0,0,0.35);
-    --bubble-bg: rgba(0,0,0,0.7);
-    --main-text-color: #e0e0e0;
-    --button-bg: #64ffda;
-    --button-text: #000000;
-    --button-shadow-main: #64ffda;
-    --button-shadow-secondary: #00bcd4;
-}
+.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:28px 20px 40px}
+body[data-theme=christmas] .app{padding-top:64px}
+header{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:26px;text-align:center}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(1.8rem,5vw,3rem);color:#fff;text-shadow:0 0 15px var(--accent),0 0 30px var(--sec)}
+#count{color:var(--ink);opacity:.85;font-size:1rem;font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:minmax(290px,370px) 1fr;gap:24px;align-items:start}
+.panel{background:var(--panel);border-radius:12px;padding:26px;box-shadow:0 0 15px var(--accent)}
+.stage{display:flex;flex-direction:column;align-items:center;text-align:center}
 
-/* Smooth fade when theme changes */
-.theme-fade {
-    animation: themeFade 0.55s ease-in-out;
-}
-@keyframes themeFade {
-    from { opacity: 0; filter: blur(2px); }
-    to   { opacity: 1; filter: blur(0); }
-}
+.label{font-size:1.1rem;opacity:.9}
+.ball{margin:6px 0 18px}
+.ball-face{font-family:var(--serif);font-weight:700;font-size:min(5.2rem,17vw);line-height:1.2;min-height:1.2em;color:var(--ink);
+  text-shadow:0 0 15px var(--accent),0 0 25px var(--sec);font-variant-numeric:tabular-nums}
+.ball.pop{animation:numberPop .6s both}
+@keyframes numberPop{0%{transform:scale(.4) rotateX(70deg);opacity:0;filter:blur(4px)}55%{transform:scale(1.15) rotateX(0);opacity:1;filter:blur(0)}100%{transform:scale(1)}}
+.say{min-height:3.2em;font-size:1.05rem;color:var(--ink);display:none}
+.say.on{display:block}
+.say small{display:block;color:var(--muted);font-size:.8rem;margin-bottom:2px}
+.recent{display:flex;gap:8px;min-height:38px;margin:4px 0 18px}
+.recent span{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:.95rem;font-weight:700;
+  border:2px solid var(--accent);background:var(--bubble);box-shadow:0 0 8px var(--accent),0 0 14px var(--sec)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;width:100%}
+button,select{font:inherit}
+button{cursor:pointer;border-radius:8px;border:none;background:var(--accent);color:var(--accent-ink);padding:11px 20px;font-size:1.05rem;font-weight:700;
+  box-shadow:0 0 8px var(--accent),0 0 20px var(--sec);transition:transform .18s,box-shadow .18s,background .18s;animation:pulse 2.8s ease-in-out infinite alternate}
+@keyframes pulse{from{box-shadow:0 0 8px var(--accent),0 0 20px var(--sec)}to{box-shadow:0 0 14px var(--accent),0 0 28px var(--sec);transform:translateY(-1px) scale(1.03)}}
+button:hover:not(:disabled){transform:translateY(-1px) scale(1.06);background:var(--sec)}
+button:active:not(:disabled){transform:translateY(1px) scale(.97)}
+button:disabled{background:#666;color:#222;box-shadow:none;animation:none;cursor:default}
+button.primary{flex:1 1 100%;font-size:1.2rem;padding:14px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);width:100%;display:grid;gap:12px;text-align:left;font-size:.95rem}
+.opts label{display:flex;align-items:center;gap:10px;justify-content:space-between;color:var(--muted)}
+.opts input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+select{background:rgba(0,0,0,.7);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.hint{font-size:.8rem;color:var(--muted);margin-top:14px}
 
-body {
-    font-family: 'Roboto Condensed', sans-serif;
-    color: var(--main-text-color);
-    overflow-x: hidden;
-    padding-bottom: 60px;
-}
+.board{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+.cell{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:clamp(.7rem,1.7vw,1.15rem);
+  font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);
+  transition:background .4s,color .3s,box-shadow .4s}
+.cell.on{color:#fff;background:var(--bubble);border:2px solid var(--accent);box-shadow:0 0 10px var(--accent),0 0 20px var(--sec)}
+[data-theme=christmas] .cell.on{border-color:transparent;background:radial-gradient(circle at 34% 28%,var(--lit-hi),var(--c) 58%,rgba(0,0,0,.45) 135%);box-shadow:0 3px 8px rgba(0,0,0,.5),0 0 12px var(--c)}
+.cell.on:nth-child(3n+1){--c:var(--lit1)}.cell.on:nth-child(3n+2){--c:var(--lit2)}.cell.on:nth-child(3n){--c:var(--lit3)}
+.cell.latest{outline:3px solid var(--ink);outline-offset:2px;animation:ping .6s ease-out}
+@keyframes ping{0%{transform:scale(1.5)}100%{transform:none}}
+.msg{margin-top:14px;color:var(--muted);font-size:.9rem;min-height:1.2em}
+footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-size:.85rem;padding-bottom:30px}
 
-/* Background gradient */
-.gradient-container {
-    position: fixed;
-    inset: 0;
-    background: var(--bg-gradient);
-    background-size: 400% 400%;
-    animation: gradientBG 10s ease infinite;
-    z-index: -2;
-}
+/* big-screen mode */
+body.display .stage .btns,body.display .opts,body.display .hint,body.display #bigbtn,body.display .say,body.display footer{display:none!important}
+body.display .layout{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:center;min-height:80vh}
+body.display .app{max-width:none;padding:24px 4vw}
+body.display .ball-face{font-size:min(15vw,26vh)}
+body.display h1{font-size:2.2rem}
+body.display .recent span{width:5vw;height:5vw;font-size:1.6vw}
+body.display .cell{font-size:1.8vw}
 
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* THEME OVERLAY (snow, fireflies, confetti) */
-#theme-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-/* Snow */
-.snowflake {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 0 6px rgba(255,255,255,0.9);
-    animation-name: snowFall;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-@keyframes snowFall {
-    0% {
-        transform: translate3d(0, -10vh, 0);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    100% {
-        transform: translate3d(0, 110vh, 0);
-        opacity: 0;
-    }
-}
-
-/* Fireflies */
-.firefly {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,0,1), rgba(255,255,0,0.1));
-    box-shadow: 0 0 8px rgba(255,255,0,0.8);
-    opacity: 0.9;
-    animation-name: fireflyDrift;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-}
-@keyframes fireflyDrift {
-    0%, 100% {
-        transform: translate3d(0, 0, 0);
-        opacity: 0.4;
-    }
-    25% {
-        transform: translate3d(20px, -10px, 0);
-        opacity: 1;
-    }
-    50% {
-        transform: translate3d(-10px, 10px, 0);
-        opacity: 0.6;
-    }
-    75% {
-        transform: translate3d(15px, 5px, 0);
-        opacity: 1;
-    }
-}
-
-/* Confetti */
-.confetti-piece {
-    position: absolute;
-    width: 8px;
-    height: 16px;
-    border-radius: 2px;
-    background: #fff;
-    opacity: 0.9;
-    transform-origin: center;
-    animation-name: confettiFall;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-@keyframes confettiFall {
-    0% {
-        transform: translate3d(0, -15vh, 0) rotateZ(0deg);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    100% {
-        transform: translate3d(0, 110vh, 0) rotateZ(360deg);
-        opacity: 0;
-    }
-}
-
-/* Layout */
-.hero {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    min-height: 100vh;
-    color: white;
-    padding-top: 40px;
-}
-
-.hero-content {
-    animation: heroFadeInDown 1.1s ease-out;
-    max-width: 600px;
-}
-
-@keyframes heroFadeInDown {
-    from { opacity: 0; transform: translateY(-25px) scale(0.97); filter: blur(2px); }
-    to   { opacity: 1; transform: translateY(0) scale(1);   filter: blur(0); }
-}
-
-.hero-content h1 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3.2em;
-    text-shadow: 0 0 15px var(--primary-accent), 0 0 30px var(--secondary-accent);
-}
-
-.hero-content p {
-    margin-top: 10px;
-    font-size: 1.15em;
-    text-shadow: 0 0 8px var(--primary-accent);
-}
-
-/* Bingo card container */
-.bingo-card {
-    margin-top: 30px;
-    background: var(--card-bg);
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 0 15px var(--primary-accent);
-    width: 90%;
-    max-width: 520px;
-    animation: cardFloatIn 1s ease-out 0.15s both;
-}
-
-@keyframes cardFloatIn {
-    from { opacity: 0; transform: translateY(30px) scale(0.97); filter: blur(3px); }
-    to   { opacity: 1; transform: translateY(0)   scale(1);    filter: blur(0); }
-}
-
-.bingo-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2.1em;
-    color: var(--primary-accent);
-    text-shadow: 0 0 10px var(--secondary-accent);
-}
-
-.bingo-subtitle {
-    font-size: 1.05em;
-    margin: 10px 0 20px;
-    opacity: 0.9;
-}
-
-/* Current number */
-#current-label {
-    font-size: 1.1em;
-    margin-top: 10px;
-    opacity: 0.9;
-}
-
-#number {
-    font-size: 4em;
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 15px var(--primary-accent), 0 0 25px var(--secondary-accent);
-    margin-top: 8px;
-    min-height: 1.2em;
-}
-
-/* Number animation styles */
-.number-animated {
-    animation-duration: 0.6s;
-    animation-fill-mode: both;
-}
-
-/* 1) Pop */
-.number-style-pop {
-    animation-name: numberPop;
-}
-@keyframes numberPop {
-    0% {
-        transform: scale(0.4) rotateX(70deg);
-        opacity: 0;
-        filter: blur(4px);
-    }
-    55% {
-        transform: scale(1.15) rotateX(0deg);
-        opacity: 1;
-        filter: blur(0);
-    }
-    100% {
-        transform: scale(1) rotateX(0deg);
-    }
-}
-
-/* 2) Slide in from left */
-.number-style-slide {
-    animation-name: numberSlide;
-}
-@keyframes numberSlide {
-    0% {
-        transform: translateX(-80px);
-        opacity: 0;
-        filter: blur(3px);
-    }
-    60% {
-        transform: translateX(10px);
-        opacity: 1;
-        filter: blur(0);
-    }
-    100% {
-        transform: translateX(0);
-    }
-}
-
-/* 3) Spin in */
-.number-style-spin {
-    animation-name: numberSpin;
-}
-@keyframes numberSpin {
-    0% {
-        transform: scale(0) rotateZ(-360deg);
-        opacity: 0;
-    }
-    70% {
-        transform: scale(1.1) rotateZ(15deg);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1) rotateZ(0deg);
-    }
-}
-
-/* 4) Bounce */
-.number-style-bounce {
-    animation-name: numberBounce;
-}
-@keyframes numberBounce {
-    0%   { transform: translateY(-80px); opacity: 0; }
-    60%  { transform: translateY(10px); opacity: 1; }
-    80%  { transform: translateY(-6px); }
-    100% { transform: translateY(0); }
-}
-
-/* 5) Zoom-fade */
-.number-style-zoomfade {
-    animation-name: numberZoomFade;
-}
-@keyframes numberZoomFade {
-    0%   { transform: scale(2.4); opacity: 0; filter: blur(4px); }
-    60%  { transform: scale(0.95); opacity: 1; filter: blur(0); }
-    100% { transform: scale(1); }
-}
-
-/* Controls */
-.bingo-controls {
-    margin-top: 16px;
-}
-
-.bingo-controls button {
-    padding: 12px 22px;
-    font-size: 1.05em;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    margin: 8px;
-    background: var(--button-bg);
-    color: var(--button-text);
-    box-shadow: 0 0 8px var(--button-shadow-main), 0 0 20px var(--button-shadow-secondary);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-    animation: buttonPulse 2.8s ease-in-out infinite alternate;
-}
-
-@keyframes buttonPulse {
-    from {
-        transform: translateY(0) scale(1);
-        box-shadow: 0 0 8px var(--button-shadow-main), 0 0 20px var(--button-shadow-secondary);
-    }
-    to {
-        transform: translateY(-1px) scale(1.03);
-        box-shadow: 0 0 14px var(--button-shadow-main), 0 0 28px var(--button-shadow-secondary);
-    }
-}
-
-.bingo-controls button:hover:not(:disabled) {
-    transform: translateY(-1px) scale(1.06);
-    background: var(--secondary-accent);
-}
-
-.bingo-controls button:active:not(:disabled) {
-    transform: translateY(1px) scale(0.97);
-    box-shadow: 0 0 4px var(--button-shadow-main), 0 0 10px var(--button-shadow-secondary);
-}
-
-.bingo-controls button:disabled {
-    background: #666;
-    color: #222;
-    box-shadow: none;
-    animation: none;
-}
-
-/* Theme selector - styled pill */
-.theme-controls {
-    margin-top: 20px;
-    display: inline-flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 14px;
-    border-radius: 999px;
-    background: rgba(0,0,0,0.45);
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
-}
-
-.theme-controls label {
-    opacity: 0.9;
-    font-size: 0.95em;
-}
-
-.theme-controls select {
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--primary-accent);
-    background: rgba(0,0,0,0.7);
-    color: var(--main-text-color);
-    outline: none;
-    font-family: inherit;
-    font-size: 0.95em;
-    box-shadow: 0 0 8px rgba(0,0,0,0.4);
-}
-
-/* History */
-#history-title {
-    font-size: 1.3em;
-    color: var(--primary-accent);
-    margin-top: 24px;
-}
-
-#history {
-    margin-top: 10px;
-}
-
-/* History bubbles */
-.bubble {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    margin: 5px;
-    border-radius: 50%;
-    border: 2px solid var(--primary-accent);
-    background: var(--bubble-bg);
-    box-shadow: 0 0 10px var(--primary-accent), 0 0 20px var(--secondary-accent);
-    animation-duration: 0.35s;
-    animation-fill-mode: both;
-}
-
-.bubble-number {
-    font-size: 1.15em;
-    font-weight: 700;
-}
-
-/* History bubble animations */
-.bubble-style-pop {
-    animation-name: bubbleIn;
-}
-@keyframes bubbleIn {
-    0% { transform: scale(0.1) translateY(10px); opacity: 0; filter: blur(3px); }
-    70% { transform: scale(1.08) translateY(0); opacity: 1; filter: blur(0); }
-    100% { transform: scale(1) translateY(0); }
-}
-
-.bubble-style-fade {
-    animation-name: bubbleFade;
-}
-@keyframes bubbleFade {
-    0% { opacity: 0; transform: scale(0.5); }
-    100% { opacity: 1; transform: scale(1); }
-}
-
-.bubble-style-rise {
-    animation-name: bubbleRise;
-}
-@keyframes bubbleRise {
-    0% { transform: translateY(12px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-}
-
-.bubble-style-pulse {
-    animation-name: bubblePulse;
-}
-@keyframes bubblePulse {
-    0%   { transform: scale(0.4); opacity: 0; }
-    60%  { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); }
-}
-
-/* Caller prompt panel (only on main screen) */
-.caller-prompt {
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    margin-top: 18px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: rgba(0,0,0,0.7);
-    box-shadow: 0 0 12px rgba(0,0,0,0.6);
-    display: none;
-    align-items: center;
-    gap: 12px;
-}
-.caller-prompt.visible {
-    display: flex;
-    opacity: 1;
-    transform: translateY(0);
-}
-.caller-prompt-content {
-    text-align: left;
-}
-.caller-prompt-title {
-    font-size: 0.9em;
-    opacity: 0.8;
-    margin-bottom: 4px;
-}
-.caller-prompt-text {
-    font-size: 1em;
-    font-weight: 600;
-    display: inline-block;
-}
-.prompt-animate {
-    animation: promptPop 0.55s ease forwards;
-}
-@keyframes promptPop {
-    0% {
-        opacity: 0;
-        transform: scale(0.8) translateY(6px);
-        filter: blur(3px);
-    }
-    60% {
-        opacity: 1;
-        transform: scale(1.05) translateY(0);
-        filter: blur(0);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* Footer */
-footer {
-    text-align: center;
-    padding: 15px 0;
-    color: var(--primary-accent);
-    text-shadow: 0 0 8px var(--secondary-accent);
-}
+@media(max-width:820px){.layout,body.display .layout{grid-template-columns:1fr}.board{gap:5px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
-
 <body>
 <div class="gradient-container"></div>
-<div id="theme-overlay"></div>
+<div id="overlay"></div>
+<div id="lights"></div>
 
-<div class="hero">
+<div class="app">
+  <header>
+    <h1>Bingo caller</h1>
+    <div id="count" aria-live="polite"></div>
+  </header>
 
-    <div class="hero-content">
-        <h1>Bingo Number Caller</h1>
-    </div>
+  <div class="layout">
+    <section class="panel stage" aria-label="Current number">
+      <div class="label">Current number:</div>
+      <div class="ball" id="ball"><div class="ball-face" id="number">–</div></div>
+      <div class="say" id="say"><small>Say</small><span id="say-text"></span></div>
+      <div class="recent" id="recent" aria-label="Previous numbers"></div>
+      <div class="btns">
+        <button class="primary" id="draw">Next number</button>
+        <button id="undo">Undo last</button>
+        <button id="reset">New game</button>
+        <button id="bigbtn">Big screen</button>
+      </div>
+      <div class="opts">
+        <label>Theme <select id="theme"></select></label>
+        <label for="opt-say">Show caller phrase <input type="checkbox" id="opt-say"></label>
+        <label for="opt-speak">Read numbers aloud <input type="checkbox" id="opt-speak"></label>
+      </div>
+      <p class="hint">Space calls the next number. U undoes.</p>
+      <p class="msg" id="msg" role="status"></p>
+    </section>
 
-    <div class="bingo-card">
-
-        <h2 class="bingo-title">Ready when you are</h2>
-
-        <!-- Current number -->
-        <div id="current-wrapper">
-            <div id="current-label">Current number:</div>
-            <div id="number">--</div>
-        </div>
-
-        <!-- Controls -->
-        <div class="bingo-controls">
-            <button id="draw-btn" type="button">Next number</button>
-            <button id="reset-btn" type="button">Start over</button>
-            <button id="projector-btn" type="button">Open big-screen view</button>
-        </div>
-
-        <!-- Theme controls -->
-        <div class="theme-controls">
-            <label for="theme-select">Theme:</label>
-            <select id="theme-select"></select>
-        </div>
-
-        <!-- Caller prompt panel (hidden unless enabled from dev console) -->
-        <div id="caller-prompt" class="caller-prompt">
-            <div class="caller-prompt-content">
-                <div class="caller-prompt-title">What to say:</div>
-                <div id="caller-prompt-text" class="caller-prompt-text">
-                    Waiting for the first number…
-                </div>
-            </div>
-        </div>
-
-        <!-- History -->
-        <h3 id="history-title">Numbers so far:</h3>
-        <div id="history"></div>
-
-    </div>
+    <section class="panel" aria-label="All numbers">
+      <div class="board" id="board"></div>
+    </section>
+  </div>
 </div>
-
 <footer>Made privately for my dad 🙂‍↔️</footer>
 
 <script>
+const TOTAL = 90;
+const KEY = "bingoCallerState_v1";
+const IS_DISPLAY = location.hash === "#display";
 
-const TOTAL_NUMBERS = 90;
-const STORAGE_KEY = "bingoCallerState_v1";
+const CALLS = {1:"Kelly's Eye",2:"One Little Duck",3:"Cup of Tea",4:"Knock at the Door",5:"Man Alive",6:"Tom Mix / half a dozen",7:"Lucky Seven",8:"Garden Gate",9:"Doctor's Orders",10:"Starmer's Den",11:"Legs Eleven",12:"One Dozen",13:"Unlucky for Some",14:"Valentine's Day",15:"Young and Keen",16:"Sweet Sixteen",17:"Dancing Queen",18:"Coming of Age",19:"Goodbye Teens",20:"One Score",21:"Royal Salute / key to the door",22:"Two Little Ducks",23:"Thee and Me",24:"Two Dozen",25:"Duck and Dive",26:"Pick and Mix",27:"Gateway to Heaven",28:"In a State",29:"Rise and Shine",30:"Dirty Gertie",31:"Get Up and Run",32:"Buckle My Shoe",33:"Dirty Knee / all the threes",34:"Ask for More",35:"Jump and Jive",36:"Three Dozen",37:"More than Eleven",38:"Christmas Cake",39:"Steps",40:"Naughty Forty",41:"Time for Fun",42:"Winnie the Pooh",43:"Down on Your Knees",44:"Droopy Drawers",45:"Halfway There",46:"Up to Tricks",47:"Four and Seven",48:"Four Dozen",49:"PC",50:"Half a Century",51:"Tweak of the Thumb",52:"Weeks in a Year",53:"Stuck in the Tree / Here Comes Herbie",54:"Clean the Floor",55:"Snakes Alive",56:"Was She Worth It?",57:"Heinz Varieties",58:"Make Them Wait",59:"Brighton Line",60:"Five Dozen",61:"Bakers Bun",62:"Turn the Screw / tickety-boo",63:"Tickle Me 63",64:"Red Raw",65:"Old Age Pension",66:"Clickety Clicks",67:"Made in Heaven",68:"Saving Grace",69:"Either Way Up",70:"Three Score and Ten",71:"Bang on the Drum",72:"Six Dozen",73:"Queen Bee",74:"Candy Store / hit the floor",75:"Strive and Strive",76:"Trombones",77:"Sunset Strip",78:"Heaven's Gate / 39 more steps",79:"One More Time",80:"Eight and Blank",81:"Stop and Run",82:"Straight On Through",83:"Time for Tea",84:"Seven Dozen",85:"Staying Alive",86:"Between the Sticks",87:"Torquay in Devon",88:"Two Fat Ladies",89:"Nearly There",90:"Top of the Shop"};
 
-const numberEl     = document.getElementById("number");
-const historyEl    = document.getElementById("history");
-const drawBtn      = document.getElementById("draw-btn");
-const resetBtn     = document.getElementById("reset-btn");
-const projectorBtn = document.getElementById("projector-btn");
-const themeSelect  = document.getElementById("theme-select");
-const overlayMain  = document.getElementById("theme-overlay");
-
-/* caller prompt elements */
-const callerPromptEl   = document.getElementById("caller-prompt");
-const callerPromptText = document.getElementById("caller-prompt-text");
-
-let remaining = [];
-let history   = [];
-let projectorWindow = null;
-let currentThemeIndex = 0;
-let currentNumberAnimClass = "number-style-pop";
-let currentBubbleAnimClass = "bubble-style-pop";
-let currentOverlayType = "none";
-let callerPromptEnabled = false;
-
-/* Bingo caller sheet mapping 1–90 */
-const CALLER_LINES = {
-    1: "Kelly's Eye",
-    2: "One Little Duck",
-    3: "Cup of Tea",
-    4: "Knock at the Door",
-    5: "Man Alive",
-    6: "Tom Mix / half a dozen",
-    7: "Lucky Seven",
-    8: "Garden Gate",
-    9: "Doctor's Orders",
-    10: "Starmer's Den",
-    11: "Legs Eleven",
-    12: "One Dozen",
-    13: "Unlucky for Some",
-    14: "Valentine's Day",
-    15: "Young and Keen",
-    16: "Sweet Sixteen",
-    17: "Dancing Queen",
-    18: "Coming of Age",
-    19: "Goodbye Teens",
-    20: "One Score",
-    21: "Royal Salute / key to the door",
-    22: "Two Little Ducks",
-    23: "Thee and Me",
-    24: "Two Dozen",
-    25: "Duck and Dive",
-    26: "Pick and Mix",
-    27: "Gateway to Heaven",
-    28: "In a State",
-    29: "Rise and Shine",
-    30: "Dirty Gertie",
-    31: "Get Up and Run",
-    32: "Buckle My Shoe",
-    33: "Dirty Knee / all the threes",
-    34: "Ask for More",
-    35: "Jump and Jive",
-    36: "Three Dozen",
-    37: "More than Eleven",
-    38: "Christmas Cake",
-    39: "Steps",
-    40: "Naughty Forty",
-    41: "Time for Fun",
-    42: "Winnie the Pooh",
-    43: "Down on Your Knees",
-    44: "Droopy Drawers",
-    45: "Halfway There",
-    46: "Up to Tricks",
-    47: "Four and Seven",
-    48: "Four Dozen",
-    49: "PC",
-    50: "Half a Century",
-    51: "Tweak of the Thumb",
-    52: "Weeks in a Year",
-    53: "Stuck in the Tree / Here Comes Herbie",
-    54: "Clean the Floor",
-    55: "Snakes Alive",
-    56: "Was She Worth It?",
-    57: "Heinz Varieties",
-    58: "Make Them Wait",
-    59: "Brighton Line",
-    60: "Five Dozen",
-    61: "Bakers Bun",
-    62: "Turn the Screw / tickety-boo",
-    63: "Tickle Me 63",
-    64: "Red Raw",
-    65: "Old Age Pension",
-    66: "Clickety Clicks",
-    67: "Made in Heaven",
-    68: "Saving Grace",
-    69: "Either Way Up",
-    70: "Three Score and Ten",
-    71: "Bang on the Drum",
-    72: "Six Dozen",
-    73: "Queen Bee",
-    74: "Candy Store / hit the floor",
-    75: "Strive and Strive",
-    76: "Trombones",
-    77: "Sunset Strip",
-    78: "Heaven's Gate / 39 more steps",
-    79: "One More Time",
-    80: "Eight and Blank",
-    81: "Stop and Run",
-    82: "Straight On Through",
-    83: "Time for Tea",
-    84: "Seven Dozen",
-    85: "Staying Alive",
-    86: "Between the Sticks",
-    87: "Torquay in Devon",
-    88: "Two Fat Ladies",
-    89: "Nearly There",
-    90: "Top of the Shop"
-};
-
-/* THEMES */
-const themes = [
-    {
-        name: "Classic Neon (Default)",
-        overlay: "none",
-        vars: {
-            "--bg-gradient": "linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4)",
-            "--primary-accent": "#64ffda",
-            "--secondary-accent": "#00bcd4",
-            "--card-bg": "rgba(0,0,0,0.35)",
-            "--bubble-bg": "rgba(0,0,0,0.7)",
-            "--main-text-color": "#e0e0e0",
-            "--button-bg": "#64ffda",
-            "--button-text": "#000000",
-            "--button-shadow-main": "#64ffda",
-            "--button-shadow-secondary": "#00bcd4"
-        },
-        numberAnim: "number-style-pop",
-        bubbleAnim: "bubble-style-pop"
-    },
-    {
-        name: "Snowy Night",
-        overlay: "snow",
-        vars: {
-            "--bg-gradient": "linear-gradient(160deg, #0d47a1, #1a237e, #000000)",
-            "--primary-accent": "#ffffff",
-            "--secondary-accent": "#bbdefb",
-            "--card-bg": "rgba(15,15,40,0.85)",
-            "--bubble-bg": "rgba(0,0,0,0.8)",
-            "--main-text-color": "#e3f2fd",
-            "--button-bg": "#bbdefb",
-            "--button-text": "#0d47a1",
-            "--button-shadow-main": "#bbdefb",
-            "--button-shadow-secondary": "#ffffff"
-        },
-        numberAnim: "number-style-spin",
-        bubbleAnim: "bubble-style-pop"
-    },
-    {
-        name: "Firefly Meadow",
-        overlay: "fireflies",
-        vars: {
-            "--bg-gradient": "linear-gradient(150deg, #001a00, #003300, #004d40)",
-            "--primary-accent": "#cddc39",
-            "--secondary-accent": "#aeea00",
-            "--card-bg": "rgba(0, 20, 0, 0.85)",
-            "--bubble-bg": "rgba(0,0,0,0.8)",
-            "--main-text-color": "#e8f5e9",
-            "--button-bg": "#cddc39",
-            "--button-text": "#1b5e20",
-            "--button-shadow-main": "#cddc39",
-            "--button-shadow-secondary": "#aeea00"
-        },
-        numberAnim: "number-style-pop",
-        bubbleAnim: "bubble-style-rise"
-    },
-    {
-        name: "Confetti Party",
-        overlay: "confetti",
-        vars: {
-            "--bg-gradient": "linear-gradient(135deg, #4a148c, #ff6f00, #d500f9)",
-            "--primary-accent": "#ffd54f",
-            "--secondary-accent": "#ff8a65",
-            "--card-bg": "rgba(0,0,0,0.75)",
-            "--bubble-bg": "rgba(0,0,0,0.85)",
-            "--main-text-color": "#fff3e0",
-            "--button-bg": "#ffd54f",
-            "--button-text": "#4a148c",
-            "--button-shadow-main": "#ffd54f",
-            "--button-shadow-secondary": "#ff8a65"
-        },
-        numberAnim: "number-style-spin",
-        bubbleAnim: "bubble-style-pop"
-    }
+/* Themes. lit1-3 colour the called numbers on the board in rotation. */
+const THEMES = [
+  {name:"Classic", overlay:"none", vars:{
+    "--bg1":"#13233a","--bg2":"#0a1220","--panel":"#16253b","--line":"#2a3d59","--ink":"#e8eef7","--muted":"#7f93ad",
+    "--accent":"#5eead4","--accent-ink":"#06201c","--ball":"#3b82c4","--ball2":"#143a66","--face":"#f4f7fb","--face-ink":"#12243d",
+    "--lit1":"#2b8f86","--lit2":"#3173b8","--lit3":"#5b5fc4","--lit-hi":"#9be8de"}},
+  {name:"Christmas", overlay:"snow", lights:true, vars:{
+    "--bg1":"#174232","--bg2":"#0a1f18","--panel":"rgba(10,31,24,.82)","--line":"rgba(217,180,90,.35)","--ink":"#f6ecd6","--muted":"#b8ae92",
+    "--accent":"#e0b955","--accent-ink":"#2a1b00","--ball":"#c52a35","--ball2":"#6c0f18","--face":"#f8efd9","--face-ink":"#7a1119",
+    "--lit1":"#c52a35","--lit2":"#237a52","--lit3":"#d4a93f","--lit-hi":"#ffd9d4"}},
+  {name:"Snowy night", overlay:"snow", vars:{
+    "--bg1":"#16305c","--bg2":"#05080f","--panel":"rgba(12,18,38,.85)","--line":"#34476e","--ink":"#e6f0ff","--muted":"#8ea3c7",
+    "--accent":"#cfe3ff","--accent-ink":"#0d2347","--ball":"#8fb4e8","--ball2":"#2c4a80","--face":"#ffffff","--face-ink":"#1a2f55",
+    "--lit1":"#5b8fd6","--lit2":"#8aa7e0","--lit3":"#a9c4ee","--lit-hi":"#ffffff"}},
+  {name:"Firefly meadow", overlay:"fireflies", vars:{
+    "--bg1":"#0f3a2a","--bg2":"#04120d","--panel":"rgba(5,25,17,.85)","--line":"#25503b","--ink":"#e6f4e8","--muted":"#8fb09a",
+    "--accent":"#c6d84a","--accent-ink":"#1f2a05","--ball":"#4f9a45","--ball2":"#1b4a22","--face":"#f4f7e8","--face-ink":"#1d3a1a",
+    "--lit1":"#5f9f3a","--lit2":"#3f8a5a","--lit3":"#8aa82e","--lit-hi":"#e3f2a0"}},
+  {name:"Party", overlay:"confetti", vars:{
+    "--bg1":"#4a1d6e","--bg2":"#1a0a2a","--panel":"rgba(26,10,42,.85)","--line":"#5d3a80","--ink":"#fdf0e0","--muted":"#bba0cf",
+    "--accent":"#ffc857","--accent-ink":"#3a1d00","--ball":"#e0527a","--ball2":"#7d1f4a","--face":"#fff6e6","--face-ink":"#4a1d6e",
+    "--lit1":"#e0527a","--lit2":"#f08a3c","--lit3":"#8a5bd6","--lit-hi":"#ffe0b8"}}
 ];
 
-/* ====== PERSISTENCE HELPERS (localStorage) ====== */
-function saveState() {
-    try {
-        const state = {
-            history,
-            remaining,
-            currentThemeIndex,
-            callerPromptEnabled,
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-        console.error("Failed to save bingo state", e);
-    }
+
+/* original-style extras per theme */
+const EXTRA = {
+  "Classic":{"--bg-gradient":"linear-gradient(-45deg,#1a237e,#0d47a1,#64ffda,#00bcd4)","--sec":"#00bcd4","--panel":"rgba(0,0,0,.35)","--bubble":"rgba(0,0,0,.7)","--ink":"#e0e0e0"},
+  "Christmas":{"--bg-gradient":"linear-gradient(160deg,#0b3d2a,#14532d,#6b1420,#0a1f18)","--sec":"#c52a35","--panel":"rgba(8,28,20,.85)","--bubble":"rgba(0,0,0,.75)"},
+  "Snowy night":{"--bg-gradient":"linear-gradient(160deg,#0d47a1,#1a237e,#000)","--accent":"#fff","--sec":"#bbdefb","--panel":"rgba(15,15,40,.85)","--bubble":"rgba(0,0,0,.8)"},
+  "Firefly meadow":{"--bg-gradient":"linear-gradient(150deg,#001a00,#003300,#004d40)","--sec":"#aeea00","--panel":"rgba(0,20,0,.85)","--bubble":"rgba(0,0,0,.8)"},
+  "Party":{"--bg-gradient":"linear-gradient(135deg,#4a148c,#ff6f00,#d500f9)","--sec":"#ff8a65","--panel":"rgba(0,0,0,.75)","--bubble":"rgba(0,0,0,.85)"}
+};
+const $ = id => document.getElementById(id);
+const el = {number:$("number"),ball:$("ball"),board:$("board"),recent:$("recent"),count:$("count"),draw:$("draw"),
+  undo:$("undo"),reset:$("reset"),big:$("bigbtn"),theme:$("theme"),say:$("say"),sayText:$("say-text"),
+  optSay:$("opt-say"),optSpeak:$("opt-speak"),msg:$("msg"),overlay:$("overlay"),lights:$("lights")};
+
+let history = [], remaining = [], themeIndex = 0, showSay = false, speak = false, bigWin = null;
+
+/* ---------- storage ---------- */
+function validNums(a){
+  return Array.isArray(a) && a.every(n => Number.isInteger(n) && n >= 1 && n <= TOTAL) && new Set(a).size === a.length;
+}
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if(!s || !validNums(s.history)) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function save(){
+  if(IS_DISPLAY) return; // the big-screen window only reads
+  try{
+    localStorage.setItem(KEY, JSON.stringify({history, remaining, currentThemeIndex:themeIndex, callerPromptEnabled:showSay, speak}));
+  }catch(e){ console.warn("Could not save game", e); }
+}
+function applyState(s){
+  history = s.history.slice();
+  // always rebuild "remaining" from history so the two can never disagree
+  remaining = Array.from({length:TOTAL},(_,i)=>i+1).filter(n=>!history.includes(n));
+  themeIndex = THEMES[s.currentThemeIndex] ? s.currentThemeIndex : 0;
+  showSay = !!s.callerPromptEnabled;
+  speak = !!s.speak;
 }
 
-function clearState() {
-    try {
-        localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {
-        console.error("Failed to clear bingo state", e);
-    }
+/* ---------- theme ---------- */
+function rnd(a,b){ return a + Math.random()*(b-a); }
+function buildOverlay(t){
+  el.overlay.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  const add = (cls,n,fn) => { for(let i=0;i<n;i++){ const d=document.createElement("div"); d.className=cls; fn(d); frag.appendChild(d);} };
+  if(t.overlay === "snow") add("flake", t.lights ? 110 : 80, d=>{
+    const s = rnd(2,6); d.style.cssText = `left:${rnd(0,100)}%;width:${s}px;height:${s}px;opacity:${rnd(.4,.95)};` +
+      `animation-duration:${rnd(9,20)}s;animation-delay:${-rnd(0,20)}s;--dx:${rnd(-60,60)}px;filter:blur(${s>4?1:0}px)`;
+  });
+  if(t.overlay === "fireflies") add("fly", 26, d=>{
+    d.style.cssText = `left:${rnd(0,100)}%;top:${rnd(0,100)}%;animation-duration:${rnd(4,9)}s;animation-delay:${-rnd(0,6)}s`;
+  });
+  if(t.overlay === "confetti") add("conf", 50, d=>{
+    d.style.cssText = `left:${rnd(0,100)}%;background:${["#ff4d6d","#ffd166","#4cc9f0","#f8961e","#b388ff"][Math.floor(rnd(0,5))]};` +
+      `animation-duration:${rnd(6,12)}s;animation-delay:${-rnd(0,12)}s;--dx:${rnd(-80,80)}px`;
+  });
+  el.overlay.appendChild(frag);
+}
+function buildLights(){
+  const W = 1000, n = 30, cols = ["#ff3b4a","#ffd166","#3ddc84","#4cc9f0","#ff8fd0"];
+  const y = i => 12 + 14*Math.abs(Math.sin(i/n*Math.PI*5));
+  let path = "M0,6", bulbs = "";
+  for(let i=0;i<=n;i++) path += ` L${(i/n*W).toFixed(1)},${y(i).toFixed(1)}`;
+  for(let i=0;i<n;i++){
+    const c = cols[i%cols.length], x = (i+.5)/n*100;
+    bulbs += `<span class="bulb" style="left:${x}%;top:${y(i+.5)+4}px;background:${c};box-shadow:0 0 14px ${c};animation-delay:${(i%5)*.45}s"></span>`;
+  }
+  el.lights.innerHTML = `<svg viewBox="0 0 ${W} 40" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="#1d1d1d" stroke-width="2"/></svg>${bulbs}`;
+}
+function setTheme(i){
+  themeIndex = i; const t = THEMES[i];
+  const v = Object.assign({}, t.vars, EXTRA[t.name]);
+  for(const k in v) document.documentElement.style.setProperty(k, v[k]);
+  document.body.dataset.theme = t.name.toLowerCase().replace(/\s+/g,"-");
+  buildOverlay(t);
+  el.theme.value = String(i);
+  save();
 }
 
-function loadState() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-    } catch (e) {
-        console.error("Failed to load bingo state", e);
-        return null;
-    }
+/* ---------- render ---------- */
+function buildBoard(){
+  for(let n=1;n<=TOTAL;n++){
+    const c = document.createElement("div");
+    c.className = "cell"; c.id = "cell-"+n; c.textContent = n;
+    el.board.appendChild(c);
+  }
+}
+function phrase(n){
+  return CALLS[n] ? `${CALLS[n]} – number ${n}` : `Number ${n}`;
+}
+function render(animate){
+  const last = history[history.length-1];
+  el.number.textContent = last ?? "–";
+  if(animate){ el.ball.classList.remove("pop"); void el.ball.offsetWidth; el.ball.classList.add("pop"); }
+
+  for(let n=1;n<=TOTAL;n++){
+    const c = $("cell-"+n);
+    c.classList.toggle("on", history.includes(n));
+    c.classList.toggle("latest", n === last);
+  }
+  el.recent.innerHTML = "";
+  history.slice(-6,-1).reverse().forEach(n => {
+    const s = document.createElement("span"); s.textContent = n; el.recent.appendChild(s);
+  });
+  el.count.textContent = history.length ? `${history.length} of ${TOTAL} called` : "No numbers called yet";
+  el.say.classList.toggle("on", showSay && !IS_DISPLAY);
+  el.sayText.textContent = last ? phrase(last) : "Waiting for the first number";
+  el.draw.disabled = remaining.length === 0;
+  el.draw.textContent = remaining.length ? "Next number" : "All 90 called";
+  el.undo.disabled = history.length === 0;
+  el.optSay.checked = showSay; el.optSpeak.checked = speak;
 }
 
-/* Helper to apply theme vars to a document (main + projector) */
-function applyThemeToDocument(doc, theme) {
-    const rootStyle = doc.documentElement.style;
-    Object.entries(theme.vars).forEach(([key, value]) => {
-        rootStyle.setProperty(key, value);
-    });
+/* ---------- actions ---------- */
+function say(n){
+  if(!speak || !("speechSynthesis" in window)) return;
+  const digits = n > 9 ? String(n).split("").join(" ") + ", " : "";
+  const u = new SpeechSynthesisUtterance(`${CALLS[n] ? CALLS[n].split(" / ")[0] + ". " : ""}${digits}${n}`);
+  u.lang = "en-GB"; u.rate = .9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function drawNumber(){
+  if(!remaining.length){ el.msg.textContent = "All 90 numbers have been called. Time to check the cards."; return; }
+  const n = remaining.splice(Math.floor(Math.random()*remaining.length),1)[0];
+  history.push(n);
+  el.msg.textContent = "";
+  save(); render(true); say(n);
+}
+function undoLast(){
+  if(!history.length) return;
+  remaining.push(history.pop());
+  el.msg.textContent = "Last number put back in the pool.";
+  save(); render(false);
+}
+function newGame(){
+  if(history.length && !confirm("Start a new game? The numbers called so far will be cleared.")) return;
+  history = []; remaining = Array.from({length:TOTAL},(_,i)=>i+1);
+  el.msg.textContent = ""; speechSynthesis && speechSynthesis.cancel();
+  save(); render(false);
+}
+function openBigScreen(){
+  if(bigWin && !bigWin.closed){ bigWin.focus(); return; }
+  bigWin = window.open(location.href.split("#")[0] + "#display", "bingo_display", "width=1200,height=720");
+  if(!bigWin) el.msg.textContent = "The big-screen window was blocked. Allow pop-ups for this page and try again.";
 }
 
-/* Build overlay in a given document based on type */
-function buildOverlay(doc, type) {
-    const overlay = doc.getElementById("theme-overlay");
-    if (!overlay) return;
+/* Console helpers kept from the original */
+window.enableCallerPrompt  = () => { showSay = true;  save(); render(false); };
+window.disableCallerPrompt = () => { showSay = false; save(); render(false); };
 
-    overlay.innerHTML = "";
-    if (type === "none") return;
+/* ---------- init ---------- */
+THEMES.forEach((t,i) => { const o = document.createElement("option"); o.value = i; o.textContent = t.name; el.theme.appendChild(o); });
+buildBoard(); buildLights();
 
-    const count = (cls) => {
-        switch (cls) {
-            case "snow": return 80;
-            case "fireflies": return 25;
-            case "confetti": return 60;
-            default: return 0;
-        }
-    };
+const saved = load();
+if(saved) applyState(saved); else { remaining = Array.from({length:TOTAL},(_,i)=>i+1); }
+setTheme(themeIndex);
+render(false);
 
-    const total = count(type);
-
-    for (let i = 0; i < total; i++) {
-        const el = doc.createElement("div");
-        if (type === "snow") {
-            el.className = "snowflake";
-            el.style.left = (Math.random() * 100) + "%";
-            el.style.animationDuration = (8 + Math.random() * 10).toFixed(1) + "s";
-            el.style.animationDelay = (-Math.random() * 10).toFixed(1) + "s";
-        } else if (type === "fireflies") {
-            el.className = "firefly";
-            el.style.top = (Math.random() * 100) + "%";
-            el.style.left = (Math.random() * 100) + "%";
-            el.style.animationDuration = (6 + Math.random() * 6).toFixed(1) + "s";
-            el.style.animationDelay = (-Math.random() * 6).toFixed(1) + "s";
-        } else if (type === "confetti") {
-            el.className = "confetti-piece";
-            el.style.left = (Math.random() * 100) + "%";
-            el.style.background = ["#ff1744", "#ffea00", "#00e5ff", "#ff9100", "#d500f9"][Math.floor(Math.random() * 5)];
-            el.style.animationDuration = (5 + Math.random() * 6).toFixed(1) + "s";
-            el.style.animationDelay = (-Math.random() * 6).toFixed(1) + "s";
-        }
-        overlay.appendChild(el);
-    }
+if(IS_DISPLAY){
+  document.body.classList.add("display");
+  document.title = "Bingo – big screen";
+  // follow the main window through localStorage
+  window.addEventListener("storage", e => {
+    if(e.key !== KEY) return;
+    const s = load(); if(!s) return;
+    const before = history.length, lastBefore = history[before-1];
+    applyState(s);
+    if(THEMES[themeIndex] && document.body.dataset.theme !== THEMES[themeIndex].name.toLowerCase().replace(/\s+/g,"-")) setTheme(themeIndex);
+    render(history[history.length-1] !== lastBefore && history.length > 0);
+  });
+}else{
+  el.draw.onclick = drawNumber; el.undo.onclick = undoLast; el.reset.onclick = newGame; el.big.onclick = openBigScreen;
+  el.theme.onchange = () => setTheme(parseInt(el.theme.value,10) || 0);
+  el.optSay.onchange = () => { showSay = el.optSay.checked; save(); render(false); };
+  el.optSpeak.onchange = () => { speak = el.optSpeak.checked; save(); };
+  document.addEventListener("keydown", e => {
+    if(e.target.closest("select,input,button") || e.ctrlKey || e.metaKey) return;
+    if(e.code === "Space"){ e.preventDefault(); drawNumber(); }
+    else if(e.key.toLowerCase() === "u") undoLast();
+  });
 }
-
-/* Theme change with fade (main + projector) */
-function setTheme(index) {
-    const theme = themes[index] || themes[0];
-    currentThemeIndex = index;
-    currentNumberAnimClass = theme.numberAnim;
-    currentBubbleAnimClass = theme.bubbleAnim;
-    currentOverlayType = theme.overlay || "none";
-
-    // Fade main
-    document.body.classList.remove("theme-fade");
-    void document.body.offsetWidth;
-    applyThemeToDocument(document, theme);
-    buildOverlay(document, currentOverlayType);
-    document.body.classList.add("theme-fade");
-
-    // Projector (if open)
-    if (projectorWindow && !projectorWindow.closed) {
-        const pDoc = projectorWindow.document;
-        pDoc.body.classList.remove("theme-fade");
-        void pDoc.body.offsetWidth;
-        applyThemeToDocument(pDoc, theme);
-        buildOverlay(pDoc, currentOverlayType);
-        pDoc.body.classList.add("theme-fade");
-
-        if (history.length > 0) updateProjector(history[history.length - 1]);
-        else updateProjector(null);
-    }
-
-    // Refresh current number + bubbles with new styles
-    if (history.length > 0) {
-        updateDisplay(history[history.length - 1]);
-        // updateDisplay will save state
-    } else {
-        numberEl.textContent = "--";
-        saveState(); // theme changed, but no numbers yet
-    }
-}
-
-/* Init theme dropdown */
-function initThemeSelect() {
-    themes.forEach((t, idx) => {
-        const opt = document.createElement("option");
-        opt.value = idx;
-        opt.textContent = t.name;
-        themeSelect.appendChild(opt);
-    });
-    themeSelect.value = "0";
-
-    themeSelect.addEventListener("change", () => {
-        const idx = parseInt(themeSelect.value, 10) || 0;
-        setTheme(idx);
-    });
-}
-
-/* Caller prompt: build phrase from sheet */
-function buildCallerPromptText(num) {
-    if (!num) return "Waiting for the first number…";
-    const line = CALLER_LINES[num];
-    if (line) {
-        return `${line} – number ${num}`;
-    }
-    return `Say: “${num}”`;
-}
-
-/* Exposed functions for dev console */
-function enableCallerPrompt() {
-    callerPromptEnabled = true;
-    callerPromptEl.classList.add("visible");
-
-    const lastNumber = history.length ? history[history.length - 1] : null;
-    callerPromptText.textContent = buildCallerPromptText(lastNumber);
-    saveState();
-}
-
-function disableCallerPrompt() {
-    callerPromptEnabled = false;
-    callerPromptEl.classList.remove("visible");
-    saveState();
-}
-
-/* Attach to window so you can call from dev console */
-window.enableCallerPrompt = enableCallerPrompt;
-window.disableCallerPrompt = disableCallerPrompt;
-
-/* Game logic */
-function initGame(clearSaved = false) {
-    remaining = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
-    history   = [];
-    numberEl.textContent = "--";
-    numberEl.className = "";
-    historyEl.innerHTML = "";
-    drawBtn.disabled = false;
-    callerPromptText.textContent = "Waiting for the first number…";
-    updateProjector(null);
-    if (clearSaved) {
-        clearState();
-    }
-    saveState();
-}
-
-function drawNumber() {
-    if (remaining.length === 0) {
-        alert("All numbers have been drawn. Game over – time to check those cards! 🎉");
-        drawBtn.disabled = true;
-        return;
-    }
-    const i   = Math.floor(Math.random() * remaining.length);
-    const num = remaining.splice(i, 1)[0];
-    history.push(num);
-    updateDisplay(num);
-}
-
-function updateDisplay(num) {
-    numberEl.classList.remove("number-animated", currentNumberAnimClass);
-    void numberEl.offsetWidth;
-    numberEl.textContent = num;
-    numberEl.classList.add("number-animated", currentNumberAnimClass);
-
-    historyEl.innerHTML = "";
-    history.forEach((n, index) => {
-        const bubble = document.createElement("div");
-        bubble.className = "bubble " + currentBubbleAnimClass;
-        bubble.style.animationDelay = (index * 0.02) + "s";
-
-        const numberSpan = document.createElement("div");
-        numberSpan.className = "bubble-number";
-        numberSpan.textContent = n;
-
-        bubble.appendChild(numberSpan);
-        historyEl.appendChild(bubble);
-    });
-
-    if (callerPromptEnabled) {
-        callerPromptText.classList.remove("prompt-animate"); // reset animation
-        void callerPromptText.offsetWidth; // force reflow
-        callerPromptText.textContent = buildCallerPromptText(num);
-        callerPromptText.classList.add("prompt-animate");
-    }
-
-    updateProjector(num);
-    saveState();
-}
-
-/* PROJECTOR WINDOW */
-function openProjector() {
-    if (!projectorWindow || projectorWindow.closed) {
-        projectorWindow = window.open("", "bingo_projector", "width=800,height=600");
-        if (!projectorWindow) {
-            alert("Please allow popups in your browser so the big-screen view can open.");
-            return;
-        }
-
-        projectorWindow.document.write(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Bingo – Big Screen</title>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-                <style>
-                    :root {
-                        --bg-gradient: linear-gradient(-45deg, #1a237e, #0d47a1, #64ffda, #00bcd4);
-                        --primary-accent: #64ffda;
-                        --secondary-accent: #00bcd4;
-                        --card-bg: rgba(0,0,0,0.35);
-                        --bubble-bg: rgba(0,0,0,0.7);
-                        --main-text-color: #e0e0e0;
-                        --button-bg: #64ffda;
-                        --button-text: #000000;
-                        --button-shadow-main: #64ffda;
-                        --button-shadow-secondary: #00bcd4;
-                    }
-                    * { box-sizing: border-box; margin: 0; padding: 0; }
-                    html, body {
-                        margin: 0;
-                        height: 100%;
-                        font-family: 'Orbitron', system-ui, sans-serif;
-                        color: #ffffff;
-                        overflow: hidden;
-                    }
-                    .theme-fade {
-                        animation: themeFade 0.55s ease-in-out;
-                    }
-                    @keyframes themeFade {
-                        from { opacity: 0; filter: blur(2px); }
-                        to   { opacity: 1; filter: blur(0); }
-                    }
-                    .background {
-                        position: fixed;
-                        inset: 0;
-                        background: var(--bg-gradient);
-                        background-size: 400% 400%;
-                        animation: gradientBG 10s ease infinite;
-                        z-index: -2;
-                    }
-                    @keyframes gradientBG {
-                        0% { background-position: 0% 50%; }
-                        50% { background-position: 100% 50%; }
-                        100% { background-position: 0% 50%; }
-                    }
-                    #theme-overlay {
-                        position: fixed;
-                        inset: 0;
-                        z-index: -1;
-                        pointer-events: none;
-                        overflow: hidden;
-                    }
-                    .snowflake {
-                        position: absolute;
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 50%;
-                        background: rgba(255,255,255,0.95);
-                        box-shadow: 0 0 6px rgba(255,255,255,0.9);
-                        animation-name: snowFall;
-                        animation-timing-function: linear;
-                        animation-iteration-count: infinite;
-                    }
-                    @keyframes snowFall {
-                        0% {
-                            transform: translate3d(0, -10vh, 0);
-                            opacity: 0;
-                        }
-                        10% {
-                            opacity: 1;
-                        }
-                        100% {
-                            transform: translate3d(0, 110vh, 0);
-                            opacity: 0;
-                        }
-                    }
-                    .firefly {
-                        position: absolute;
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 50%;
-                        background: radial-gradient(circle, rgba(255,255,0,1), rgba(255,255,0,0.1));
-                        box-shadow: 0 0 8px rgba(255,255,0,0.8);
-                        opacity: 0.9;
-                        animation-name: fireflyDrift;
-                        animation-timing-function: ease-in-out;
-                        animation-iteration-count: infinite;
-                    }
-                    @keyframes fireflyDrift {
-                        0%, 100% {
-                            transform: translate3d(0, 0, 0);
-                            opacity: 0.4;
-                        }
-                        25% {
-                            transform: translate3d(20px, -10px, 0);
-                            opacity: 1;
-                        }
-                        50% {
-                            transform: translate3d(-10px, 10px, 0);
-                            opacity: 0.6;
-                        }
-                        75% {
-                            transform: translate3d(15px, 5px, 0);
-                            opacity: 1;
-                        }
-                    }
-                    .confetti-piece {
-                        position: absolute;
-                        width: 8px;
-                        height: 16px;
-                        border-radius: 2px;
-                        background: #fff;
-                        opacity: 0.9;
-                        transform-origin: center;
-                        animation-name: confettiFall;
-                        animation-timing-function: linear;
-                        animation-iteration-count: infinite;
-                    }
-                    @keyframes confettiFall {
-                        0% {
-                            transform: translate3d(0, -15vh, 0) rotateZ(0deg);
-                            opacity: 0;
-                        }
-                        10% {
-                            opacity: 1;
-                        }
-                        100% {
-                            transform: translate3d(0, 110vh, 0) rotateZ(360deg);
-                            opacity: 0;
-                        }
-                    }
-                    .wrapper {
-                        position: relative;
-                        z-index: 1;
-                        height: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        text-align: center;
-                        padding: 20px;
-                    }
-                    .label {
-                        font-size: 3vw;
-                        text-shadow: 0 0 10px var(--primary-accent), 0 0 20px var(--secondary-accent);
-                        margin-bottom: 1rem;
-                    }
-                    #projector-number {
-                        font-size: 20vw;
-                        line-height: 1;
-                        text-shadow: 0 0 30px var(--primary-accent), 0 0 60px var(--secondary-accent);
-                    }
-                    /* Projector number animations */
-                    .number-animated {
-                        animation-duration: 0.6s;
-                        animation-fill-mode: both;
-                    }
-                    .number-style-pop {
-                        animation-name: projNumberPop;
-                    }
-                    @keyframes projNumberPop {
-                        0% {
-                            transform: scale(0.4) rotateX(70deg);
-                            opacity: 0;
-                            filter: blur(4px);
-                        }
-                        55% {
-                            transform: scale(1.15) rotateX(0deg);
-                            opacity: 1;
-                            filter: blur(0);
-                        }
-                        100% {
-                            transform: scale(1) rotateX(0deg);
-                        }
-                    }
-                    .number-style-slide {
-                        animation-name: projNumberSlide;
-                    }
-                    @keyframes projNumberSlide {
-                        0% {
-                            transform: translateX(-80px);
-                            opacity: 0;
-                            filter: blur(3px);
-                        }
-                        60% {
-                            transform: translateX(10px);
-                            opacity: 1;
-                            filter: blur(0);
-                        }
-                        100% {
-                            transform: translateX(0);
-                        }
-                    }
-                    .number-style-spin {
-                        animation-name: projNumberSpin;
-                    }
-                    @keyframes projNumberSpin {
-                        0% {
-                            transform: scale(0) rotateZ(-360deg);
-                            opacity: 0;
-                        }
-                        70% {
-                            transform: scale(1.1) rotateZ(15deg);
-                            opacity: 1;
-                        }
-                        100% {
-                            transform: scale(1) rotateZ(0deg);
-                        }
-                    }
-                    .number-style-bounce {
-                        animation-name: projNumberBounce;
-                    }
-                    @keyframes projNumberBounce {
-                        0%   { transform: translateY(-80px); opacity: 0; }
-                        60%  { transform: translateY(10px); opacity: 1; }
-                        80%  { transform: translateY(-6px); }
-                        100% { transform: translateY(0); }
-                    }
-                    .number-style-zoomfade {
-                        animation-name: projNumberZoomFade;
-                    }
-                    @keyframes projNumberZoomFade {
-                        0%   { transform: scale(2.4); opacity: 0; filter: blur(4px); }
-                        60%  { transform: scale(0.95); opacity: 1; filter: blur(0); }
-                        100% { transform: scale(1); }
-                    }
-                    @media (max-width: 700px) {
-                        .label { font-size: 5vw; }
-                        #projector-number { font-size: 30vw; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="background"></div>
-                <div id="theme-overlay"></div>
-                <div class="wrapper">
-                    <div class="label">The current number is:</div>
-                    <div id="projector-number">--</div>
-                </div>
-            </body>
-            </html>
-        `);
-        projectorWindow.document.close();
-
-        setTimeout(() => {
-            const theme = themes[currentThemeIndex] || themes[0];
-            applyThemeToDocument(projectorWindow.document, theme);
-            buildOverlay(projectorWindow.document, currentOverlayType);
-            if (history.length > 0) updateProjector(history[history.length - 1]);
-            else updateProjector(null);
-        }, 50);
-    } else {
-        const theme = themes[currentThemeIndex] || themes[0];
-        applyThemeToDocument(projectorWindow.document, theme);
-        buildOverlay(projectorWindow.document, currentOverlayType);
-        if (history.length > 0) updateProjector(history[history.length - 1]);
-        else updateProjector(null);
-    }
-}
-
-function updateProjector(num) {
-    if (!projectorWindow || projectorWindow.closed) return;
-
-    const doc = projectorWindow.document;
-    const el  = doc.getElementById("projector-number");
-    if (!el) return;
-
-    el.classList.remove("number-animated", currentNumberAnimClass);
-    void el.offsetWidth;
-
-    el.textContent = (num == null ? "--" : String(num));
-
-    el.classList.add("number-animated", currentNumberAnimClass);
-}
-
-/* BOOTSTRAP: restore from localStorage if possible */
-function bootstrap() {
-    initThemeSelect();
-
-    const stored = loadState();
-    if (stored && Array.isArray(stored.history) && Array.isArray(stored.remaining)) {
-        history = stored.history;
-        remaining = stored.remaining;
-        currentThemeIndex = stored.currentThemeIndex || 0;
-        callerPromptEnabled = !!stored.callerPromptEnabled;
-
-        if (callerPromptEnabled) {
-            callerPromptEl.classList.add("visible");
-        } else {
-            callerPromptEl.classList.remove("visible");
-        }
-
-        themeSelect.value = String(currentThemeIndex);
-        setTheme(currentThemeIndex);
-
-        if (history.length === 0) {
-            numberEl.textContent = "--";
-            callerPromptText.textContent = "Waiting for the first number…";
-        } else {
-            const last = history[history.length - 1];
-            // setTheme already called updateDisplay (which updated DOM & saved)
-            if (callerPromptEnabled) {
-                callerPromptText.textContent = buildCallerPromptText(last);
-            } else {
-                callerPromptText.textContent = "Waiting for the first number…";
-            }
-        }
-
-        drawBtn.disabled = remaining.length === 0;
-    } else {
-        themeSelect.value = "0";
-        setTheme(0);
-        initGame(true); // start fresh and clear any junk state
-    }
-}
-
-/* EVENTS */
-drawBtn.addEventListener("click", drawNumber);
-resetBtn.addEventListener("click", () => initGame(true));
-projectorBtn.addEventListener("click", openProjector);
-
-/* INIT */
-bootstrap();
 </script>
-
 </body>
 </html>
