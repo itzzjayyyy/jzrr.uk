@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bingo Caller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Orbitron:wght@400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* classic is the base look, the other themes only override variables and add scenery */
+:root{
+  --ink:#e0e0e0;--muted:#7f93ad;--line:#2a3d59;--panel:rgba(0,0,0,.35);--bubble:rgba(0,0,0,.7);
+  --accent:#5eead4;--accent-ink:#06201c;--sec:#00bcd4;
+  --lit1:#5eead4;--lit2:#5eead4;--lit3:#5eead4;
+  --bg:linear-gradient(-45deg,#1a237e,#0d47a1,#64ffda,#00bcd4);
+  --sans:'Roboto Condensed',system-ui,sans-serif;--serif:'Orbitron',system-ui,sans-serif;
+}
+[data-theme=christmas]{--ink:#f6ecd6;--muted:#b8ae92;--line:rgba(217,180,90,.35);--panel:rgba(8,28,20,.85);--bubble:rgba(0,0,0,.75);
+  --accent:#e0b955;--accent-ink:#2a1b00;--sec:#c52a35;--lit1:#d62f3b;--lit2:#1f8a5b;--lit3:#d9a93a;
+  --bg:linear-gradient(170deg,#06251b,#0f4a33 45%,#5a1020)}
+[data-theme=synthwave]{--ink:#fbe9ff;--muted:#b79ad0;--line:#5a2a7a;--panel:rgba(18,0,31,.8);--bubble:rgba(10,0,20,.85);
+  --accent:#ff4fd8;--accent-ink:#1a0030;--sec:#00e5ff;--lit1:#ff2a6d;--lit2:#00e5ff;--lit3:#a56bff;
+  --bg:linear-gradient(180deg,#12001f,#3d0a63 55%,#b3124f)}
+[data-theme=fireworks]{--ink:#eef0ff;--muted:#8b93c4;--line:#2c3470;--panel:rgba(3,5,20,.8);--bubble:rgba(0,0,10,.8);
+  --accent:#ffcf5c;--accent-ink:#2a1d00;--sec:#ff5d5d;--lit1:#ff5d5d;--lit2:#ffcf5c;--lit3:#4cc9f0;
+  --bg:linear-gradient(180deg,#02030f,#0b1233 65%,#2a1d4a)}
+
+html{background:#0a1220}
+body{font-family:var(--sans);color:var(--ink);min-height:100vh;font-size:17px}
+.bg{position:fixed;inset:0;z-index:-2;background:var(--bg);background-size:100% 100%}
+[data-theme=classic] .bg{background-size:400% 400%;animation:shift 10s ease infinite}
+@keyframes shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+#sky,#scene,#fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#fx{width:100%;height:100%}
+#scene>*{position:absolute}
+.star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twinkle 3s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:1;filter:brightness(1.15)}50%{opacity:.55;filter:brightness(.7)}}
+
+/* christmas */
+#lights{position:fixed;left:0;right:0;top:0;height:56px;z-index:3;pointer-events:none;display:none}
+[data-theme=christmas] #lights{display:block}
+#lights svg{position:absolute;inset:0;width:100%;height:100%}
+.bulb{position:absolute;width:12px;height:18px;margin-left:-6px;border-radius:50% 50% 55% 55%;animation:twinkle 2.4s ease-in-out infinite}
+.bulb::before{content:"";position:absolute;left:2px;top:-5px;width:8px;height:6px;background:#2a2a2a;border-radius:2px}
+[data-theme=christmas] #sky::before{content:"";position:absolute;inset:0;filter:blur(5px);animation:bokeh 5s ease-in-out infinite alternate;
+  background:radial-gradient(circle at 8% 78%,rgba(255,206,110,.28) 0 34px,transparent 35px),radial-gradient(circle at 22% 90%,rgba(255,110,110,.2) 0 24px,transparent 25px),
+  radial-gradient(circle at 90% 70%,rgba(255,206,110,.25) 0 40px,transparent 41px),radial-gradient(circle at 76% 92%,rgba(120,220,160,.2) 0 28px,transparent 29px),
+  radial-gradient(circle at 50% 96%,rgba(255,206,110,.22) 0 30px,transparent 31px)}
+@keyframes bokeh{from{opacity:.45}to{opacity:1}}
+.tree{bottom:0;width:clamp(110px,13vw,190px);filter:drop-shadow(0 0 14px rgba(255,200,90,.25))}
+.tree.l{left:1.5vw}.tree.r{right:1.5vw;transform:scaleX(-1)}
+.tree .b{animation:twinkle 2s ease-in-out infinite}
+[data-theme=christmas] h1{font-family:'Mountains of Christmas',Georgia,serif;color:#fff7e0;text-shadow:0 0 14px #e0b955,0 0 28px #c52a35}
+[data-theme=christmas] .panel{border:1px solid rgba(224,185,85,.4);box-shadow:0 0 22px rgba(224,185,85,.35),0 8px 30px rgba(0,0,0,.45)}
+body[data-theme=christmas] .app{padding-top:64px}
+
+/* synthwave */
+.halo{left:50%;bottom:34%;width:min(80vw,740px);aspect-ratio:1;transform:translate(-50%,50%);background:radial-gradient(circle,rgba(255,42,109,.45),transparent 62%)}
+.sun{left:50%;bottom:34%;width:min(46vw,420px);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;
+  background:linear-gradient(#ffd166,#ff2a6d 58%,#a100ff);
+  -webkit-mask-image:repeating-linear-gradient(#000 0 14px,transparent 14px 19px);mask-image:repeating-linear-gradient(#000 0 14px,transparent 14px 19px)}
+.mtn{left:0;bottom:38%;width:100%;height:12%;fill:#1a0836;stroke:#00e5ff;stroke-width:1.5;filter:drop-shadow(0 0 6px #00e5ff)}
+.mtn path{vector-effect:non-scaling-stroke}
+.floor{left:0;right:0;bottom:0;height:38%;overflow:hidden;background:linear-gradient(#2a0545,#0a0014);border-top:2px solid #ff4fd8;box-shadow:0 -4px 24px rgba(255,79,216,.6)}
+.grid{position:absolute;left:-60%;right:-60%;bottom:0;height:100%;transform:perspective(260px) rotateX(58deg);transform-origin:bottom;
+  background:repeating-linear-gradient(90deg,rgba(0,229,255,.65) 0 2px,transparent 2px 80px),repeating-linear-gradient(0deg,rgba(0,229,255,.65) 0 2px,transparent 2px 56px);
+  animation:roll 1.6s linear infinite;-webkit-mask-image:linear-gradient(transparent,#000 60%);mask-image:linear-gradient(transparent,#000 60%)}
+@keyframes roll{to{background-position:0 0,0 56px}}
+
+/* fireworks */
+.city{left:0;bottom:0;width:100%;height:15%;fill:#04050d}
+.glow{left:0;right:0;bottom:0;height:30%;background:linear-gradient(to top,rgba(255,150,60,.22),transparent)}
+
+.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:28px 20px 40px}
+header{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:26px;text-align:center}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(1.8rem,5vw,3rem);color:#fff;text-shadow:0 0 15px var(--accent),0 0 30px var(--sec)}
+#count{opacity:.85;font-size:1rem;font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:minmax(290px,370px) 1fr;gap:24px;align-items:start}
+.panel{background:var(--panel);border-radius:12px;padding:26px;box-shadow:0 0 15px var(--accent)}
+.stage{display:flex;flex-direction:column;align-items:center;text-align:center}
+.label{font-size:1.1rem;opacity:.9}
+.ball{margin:6px 0 18px}
+.ball-face{font-family:var(--serif);font-weight:700;font-size:min(5.2rem,17vw);line-height:1.2;min-height:1.2em;
+  text-shadow:0 0 15px var(--accent),0 0 25px var(--sec);font-variant-numeric:tabular-nums}
+.ball.pop{animation:pop .6s both}
+@keyframes pop{0%{transform:scale(.4) rotateX(70deg);opacity:0;filter:blur(4px)}55%{transform:scale(1.15) rotateX(0);opacity:1;filter:blur(0)}100%{transform:scale(1)}}
+.say{min-height:3.2em;font-size:1.05rem;display:none}
+.say.on{display:block}
+.say small{display:block;color:var(--muted);font-size:.8rem;margin-bottom:2px}
+.recent{display:flex;gap:8px;min-height:38px;margin:4px 0 18px}
+.recent span{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:.95rem;font-weight:700;
+  border:2px solid var(--accent);background:var(--bubble);box-shadow:0 0 8px var(--accent),0 0 14px var(--sec)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;width:100%}
+button,select{font:inherit}
+button{cursor:pointer;border-radius:8px;border:none;background:var(--accent);color:var(--accent-ink);padding:11px 20px;font-size:1.05rem;font-weight:700;
+  box-shadow:0 0 8px var(--accent),0 0 20px var(--sec);transition:transform .18s,box-shadow .18s,background .18s;animation:pulse 2.8s ease-in-out infinite alternate}
+@keyframes pulse{from{box-shadow:0 0 8px var(--accent),0 0 20px var(--sec)}to{box-shadow:0 0 14px var(--accent),0 0 28px var(--sec);transform:translateY(-1px) scale(1.03)}}
+button:hover:not(:disabled){transform:translateY(-1px) scale(1.06);background:var(--sec)}
+button:active:not(:disabled){transform:translateY(1px) scale(.97)}
+button:disabled{background:#666;color:#222;box-shadow:none;animation:none;cursor:default}
+button.primary{flex:1 1 100%;font-size:1.2rem;padding:14px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);width:100%;display:grid;gap:12px;text-align:left;font-size:.95rem}
+.opts label{display:flex;align-items:center;gap:10px;justify-content:space-between;color:var(--muted)}
+.opts input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+select{background:rgba(0,0,0,.7);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.hint{font-size:.8rem;color:var(--muted);margin-top:14px}
+.msg{margin-top:14px;color:var(--muted);font-size:.9rem;min-height:1.2em}
+footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-size:.85rem;padding-bottom:30px}
+
+.board{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px}
+.cell{position:relative;width:100%;min-width:0;line-height:1;aspect-ratio:1/1;border-radius:50%;display:grid;place-items:center;font-size:clamp(.7rem,1.7vw,1.15rem);
+  font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);
+  transition:background .4s,color .3s,box-shadow .4s}
+.cell.on{color:#fff;background:var(--bubble);border:2px solid var(--accent);box-shadow:0 0 10px var(--accent),0 0 20px var(--sec)}
+.cell.on:nth-child(3n+1),.recent span:nth-child(3n+1){--c:var(--lit1)}
+.cell.on:nth-child(3n+2),.recent span:nth-child(3n+2){--c:var(--lit2)}
+.cell.on:nth-child(3n),.recent span:nth-child(3n){--c:var(--lit3)}
+.cell.latest{animation:ping .6s ease-out}
+.cell.latest::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--ink);pointer-events:none}
+@keyframes ping{0%{transform:scale(1.5)}100%{transform:none}}
+
+[data-theme=christmas] .cell.on,[data-theme=christmas] .recent span{border:0;text-shadow:0 1px 2px rgba(0,0,0,.6);
+  background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.95),rgba(255,255,255,.5) 9%,transparent 26%),radial-gradient(circle closest-side,var(--c) 62%,rgba(0,0,0,.5));
+  box-shadow:0 3px 8px rgba(0,0,0,.5),0 0 14px var(--c)}
+[data-theme=christmas] .cell.latest::after{border-color:#fff}
+[data-theme=synthwave] .cell.on,[data-theme=synthwave] .recent span{border-color:var(--c);box-shadow:0 0 8px var(--c),0 0 18px var(--c)}
+[data-theme=fireworks] .cell.on,[data-theme=fireworks] .recent span{border-color:var(--c);background:radial-gradient(circle,var(--c) -40%,rgba(0,0,10,.85) 78%);box-shadow:0 0 12px var(--c)}
+
+/* big screen */
+body.display .stage .btns,body.display .opts,body.display .hint,body.display #bigbtn,body.display .say,body.display footer{display:none!important}
+body.display .layout{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:center;min-height:80vh}
+body.display .app{max-width:none;padding:24px 4vw}
+body.display .ball-face{font-size:min(15vw,26vh)}
+body.display h1{font-size:2.2rem}
+body.display .recent span{width:5vw;height:5vw;font-size:1.6vw}
+body.display .cell{font-size:1.8vw}
+
+@media(max-width:820px){.layout,body.display .layout{grid-template-columns:1fr}.board{gap:5px}.tree{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div id="sky"></div>
+<div id="scene"></div>
+<canvas id="fx"></canvas>
+<div id="lights"></div>
+
+<div class="app">
+  <header>
+    <h1>Bingo caller</h1>
+    <div id="count" aria-live="polite"></div>
+  </header>
+
+  <div class="layout">
+    <section class="panel stage" aria-label="Current number">
+      <div class="label">Current number:</div>
+      <div class="ball" id="ball"><div class="ball-face" id="number">–</div></div>
+      <div class="say" id="say"><small>Say</small><span id="say-text"></span></div>
+      <div class="recent" id="recent" aria-label="Previous numbers"></div>
+      <div class="btns">
+        <button class="primary" id="draw">Next number</button>
+        <button id="undo">Undo last</button>
+        <button id="reset">New game</button>
+        <button id="bigbtn">Big screen</button>
+      </div>
+      <div class="opts">
+        <label>Theme <select id="theme"></select></label>
+        <label for="opt-say">Show caller phrase <input type="checkbox" id="opt-say"></label>
+      </div>
+      <p class="hint">Space calls the next number. U undoes.</p>
+      <p class="msg" id="msg" role="status"></p>
+    </section>
+
+    <section class="panel" aria-label="All numbers">
+      <div class="board" id="board"></div>
+    </section>
+  </div>
+</div>
+<footer>hello dad 😈</footer>
+
+<script>
+const TOTAL = 90;
+const KEY = "bingoCallerState_v1";
+const isDisplay = location.hash === "#display";
+
+const CALLS = {1:"Kelly's Eye",2:"One Little Duck",3:"Cup of Tea",4:"Knock at the Door",5:"Man Alive",6:"Tom Mix / half a dozen",7:"Lucky Seven",8:"Garden Gate",9:"Doctor's Orders",10:"Starmer's Den",11:"Legs Eleven",12:"One Dozen",13:"Unlucky for Some",14:"Valentine's Day",15:"Young and Keen",16:"Sweet Sixteen",17:"Dancing Queen",18:"Coming of Age",19:"Goodbye Teens",20:"One Score",21:"Royal Salute / key to the door",22:"Two Little Ducks",23:"Thee and Me",24:"Two Dozen",25:"Duck and Dive",26:"Pick and Mix",27:"Gateway to Heaven",28:"In a State",29:"Rise and Shine",30:"Dirty Gertie",31:"Get Up and Run",32:"Buckle My Shoe",33:"Dirty Knee / all the threes",34:"Ask for More",35:"Jump and Jive",36:"Three Dozen",37:"More than Eleven",38:"Christmas Cake",39:"Steps",40:"Naughty Forty",41:"Time for Fun",42:"Winnie the Pooh",43:"Down on Your Knees",44:"Droopy Drawers",45:"Halfway There",46:"Up to Tricks",47:"Four and Seven",48:"Four Dozen",49:"PC",50:"Half a Century",51:"Tweak of the Thumb",52:"Weeks in a Year",53:"Stuck in the Tree / Here Comes Herbie",54:"Clean the Floor",55:"Snakes Alive",56:"Was She Worth It?",57:"Heinz Varieties",58:"Make Them Wait",59:"Brighton Line",60:"Five Dozen",61:"Bakers Bun",62:"Turn the Screw / tickety-boo",63:"Tickle Me 63",64:"Red Raw",65:"Old Age Pension",66:"Clickety Clicks",67:"Made in Heaven",68:"Saving Grace",69:"Either Way Up",70:"Three Score and Ten",71:"Bang on the Drum",72:"Six Dozen",73:"Queen Bee",74:"Candy Store / hit the floor",75:"Strive and Strive",76:"Trombones",77:"Sunset Strip",78:"Heaven's Gate / 39 more steps",79:"One More Time",80:"Eight and Blank",81:"Stop and Run",82:"Straight On Through",83:"Time for Tea",84:"Seven Dozen",85:"Staying Alive",86:"Between the Sticks",87:"Torquay in Devon",88:"Two Fat Ladies",89:"Nearly There",90:"Top of the Shop"};
+
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const el = {number:$("number"), ball:$("ball"), board:$("board"), recent:$("recent"), count:$("count"), draw:$("draw"),
+  undo:$("undo"), reset:$("reset"), big:$("bigbtn"), theme:$("theme"), say:$("say"), sayText:$("say-text"),
+  optSay:$("opt-say"), msg:$("msg"), sky:$("sky"), scene:$("scene"), lights:$("lights")};
+
+let history = [], remaining = [], themeIndex = 0, showSay = false, bigWin = null;
+
+/* scenery */
+const treeSvg = side => {
+  const baubles = [[60,40,"#ff4757"],[46,70,"#ffd166"],[74,84,"#4cc9f0"],[36,114,"#ff4757"],[62,106,"#ffd166"],[88,126,"#ff8fd0"],[50,138,"#4cc9f0"],[78,58,"#ff4757"]]
+    .map(([x,y,c],i) => `<circle class="b" cx="${x}" cy="${y}" r="4.5" fill="${c}" style="animation-delay:${i*.35}s"/>`).join("");
+  return `<svg class="tree ${side}" viewBox="0 0 120 170">
+    <rect x="52" y="150" width="16" height="18" fill="#4a2a14"/>
+    <path d="M60 12 L92 62 H78 L104 104 H86 L112 148 H8 L34 104 H16 L42 62 H28Z" fill="#12573a"/>
+    <path d="M60 12 L92 62 H78 L104 104 H86 L112 148 H60Z" fill="#0d4a30" opacity=".7"/>
+    <path d="M34 66Q60 80 86 62M22 108Q60 126 98 104" stroke="#ffd966" stroke-width="2" fill="none" opacity=".8"/>
+    <circle class="b" cx="60" cy="12" r="15" fill="#ffd966" opacity=".28"/>
+    <polygon points="60,0 64,10 75,10 66,17 69,28 60,21 51,28 54,17 45,10 56,10" fill="#ffd966"/>${baubles}</svg>`;
+};
+const synthScene = `<div class="halo"></div><div class="sun"></div>
+  <svg class="mtn" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="M0 100V62L90 30L170 66L260 20L350 70L430 40L520 74L610 26L700 68L790 34L880 70L1000 38V100Z"/></svg>
+  <div class="floor"><div class="grid"></div></div>`;
+const cityScene = `<div class="glow"></div><svg class="city" viewBox="0 0 1000 120" preserveAspectRatio="none"><path d="M0 120V78H50V52H84V70H120V36H158V66H196V84H240V48H282V74H330V28H366V62H410V80H456V44H500V70H548V90H590V54H632V30H676V66H720V82H770V46H812V72H860V38H902V64H950V80H1000V120Z"/></svg>`;
+
+const THEMES = [
+  {key:"classic", name:"Classic"},
+  {key:"christmas", name:"Christmas", fx:"snow", stars:70, scene:treeSvg("l") + treeSvg("r")},
+  {key:"synthwave", name:"Synthwave", stars:60, scene:synthScene},
+  {key:"fireworks", name:"Fireworks", fx:"fireworks", stars:80, scene:cityScene}
+];
+
+/* canvas effects: falling snow and fireworks share one canvas */
+const fx = (() => {
+  const cv = $("fx"), ctx = cv.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const GRAVITY = 260;
+  let W = 0, H = 0, mode = null, raf = 0, last = 0, t = 0, nextShot = 0;
+  let flakes = [], sparks = [], rockets = [];
+
+  function newFlake(anywhere){
+    const d = Math.random();
+    return {x:rnd(0,W), y:anywhere ? rnd(0,H) : rnd(-20,-4), r:1.2 + d*d*2.8, d, vy:24 + d*58, ph:rnd(0,6.3), fq:rnd(.6,1.6), sw:rnd(8,22)};
+  }
+  function fit(){
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W*ratio; cv.height = H*ratio; ctx.setTransform(ratio,0,0,ratio,0,0);
+    if(mode === "snow"){
+      const n = Math.round(Math.min(240, Math.max(90, W*H/7000)));
+      while(flakes.length < n) flakes.push(newFlake(true));
+      flakes.length = n;
+    }
+  }
+
+  function snowFrame(dt){
+    const wind = Math.sin(t*.23)*14 + Math.sin(t*.071)*9;
+    ctx.clearRect(0,0,W,H);
+    for(const f of flakes){
+      f.y += f.vy*dt;
+      f.x += (Math.sin(t*f.fq + f.ph)*f.sw + wind*(.4 + f.d*.6)) * dt;
+      if(f.x < -10) f.x += W + 20; else if(f.x > W + 10) f.x -= W + 20;
+      if(f.y > H + 6) Object.assign(f, newFlake(false));
+      const a = .45 + f.d*.5;
+      if(f.r > 2.6){ ctx.fillStyle = `rgba(255,255,255,${a*.18})`; ctx.beginPath(); ctx.arc(f.x,f.y,f.r*2,0,6.283); ctx.fill(); }
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,6.283); ctx.fill();
+    }
+  }
+
+  function launch(){
+    const apex = rnd(.14,.5)*H;
+    rockets.push({x:rnd(.1,.9)*W, y:H, vx:rnd(-18,18), vy:-Math.sqrt(2*GRAVITY*(H-apex)), hue:rnd(0,360)});
+  }
+  function explode(x, y, hue){
+    const kind = ["burst","ring","willow"][Math.floor(rnd(0,3))];
+    const other = Math.random() < .4 ? (hue + rnd(120,240)) % 360 : hue;
+    const n = kind === "burst" ? 95 : 64;
+    for(let i=0;i<n;i++){
+      const a = kind === "burst" ? rnd(0,6.283) : i/n*6.283;
+      const sp = kind === "burst" ? rnd(30,190) : kind === "ring" ? 140 + rnd(-5,5) : rnd(40,120);
+      sparks.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, age:0, max:kind === "willow" ? rnd(2,2.8) : rnd(1,1.6),
+        hue:kind === "willow" ? 42 : i%2 ? hue : other, light:kind === "willow" ? 68 : 60, drag:kind === "willow" ? .9 : 1.4, g:kind === "willow" ? 110 : 80});
+    }
+  }
+  function fireFrame(dt){
+    if(t >= nextShot){ launch(); if(Math.random() < .3) launch(); nextShot = t + rnd(.6,1.6); }
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation = "lighter";
+    rockets = rockets.filter(r => {
+      r.vy += GRAVITY*dt; r.x += r.vx*dt; r.y += r.vy*dt;
+      sparks.push({x:r.x, y:r.y, vx:rnd(-8,8), vy:rnd(10,30), age:0, max:.45, hue:42, light:70, drag:2, g:0});
+      if(r.vy > -25){ explode(r.x, r.y, r.hue); return false; }
+      return true;
+    });
+    sparks = sparks.filter(s => {
+      s.age += dt; if(s.age >= s.max) return false;
+      const k = Math.exp(-s.drag*dt);
+      s.vx *= k; s.vy = s.vy*k + s.g*dt; s.x += s.vx*dt; s.y += s.vy*dt;
+      ctx.fillStyle = `hsla(${s.hue},100%,${s.light}%,${1 - s.age/s.max})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 1.7, 0, 6.283); ctx.fill();
+      return true;
+    });
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  function tick(ts){
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(.05, (ts - last)/1000 || 0);
+    last = ts; t += dt;
+    mode === "snow" ? snowFrame(dt) : fireFrame(dt);
+  }
+  addEventListener("resize", () => { if(mode) fit(); });
+  return {
+    run(next){
+      cancelAnimationFrame(raf); raf = 0;
+      mode = next || null; flakes = []; sparks = []; rockets = [];
+      if(!mode){ ctx.clearRect(0,0,cv.width,cv.height); return; }
+      fit();
+      if(still){ if(mode === "snow") snowFrame(0); return; }
+      last = performance.now(); nextShot = t; raf = requestAnimationFrame(tick);
+    }
+  };
+})();
+
+/* theme */
+function buildLights(){
+  const W = 1000, n = 30, cols = ["#ff3b4a","#ffd166","#3ddc84","#4cc9f0","#ff8fd0"];
+  const y = i => 12 + 14*Math.abs(Math.sin(i/n*Math.PI*5));
+  let wire = "M0,6", bulbs = "";
+  for(let i=0;i<=n;i++) wire += ` L${(i/n*W).toFixed(1)},${y(i).toFixed(1)}`;
+  for(let i=0;i<n;i++){
+    const c = cols[i % cols.length];
+    bulbs += `<span class="bulb" style="left:${(i+.5)/n*100}%;top:${y(i+.5)+4}px;background:${c};box-shadow:0 0 14px ${c};animation-delay:${(i%5)*.45}s"></span>`;
+  }
+  el.lights.innerHTML = `<svg viewBox="0 0 ${W} 40" preserveAspectRatio="none"><path d="${wire}" fill="none" stroke="#1d1d1d" stroke-width="2"/></svg>${bulbs}`;
+}
+function setTheme(i){
+  themeIndex = i;
+  const t = THEMES[i];
+  document.body.dataset.theme = t.key;
+  el.sky.innerHTML = Array.from({length:t.stars || 0}, () =>
+    `<i class="star" style="left:${rnd(0,100)}%;top:${rnd(0,55)}%;animation-duration:${rnd(2,5)}s;animation-delay:${-rnd(0,5)}s"></i>`).join("");
+  el.scene.innerHTML = t.scene || "";
+  fx.run(t.fx);
+  el.theme.value = i;
+  save();
+}
+
+/* saving */
+function validNums(a){
+  return Array.isArray(a) && a.every(n => Number.isInteger(n) && n >= 1 && n <= TOTAL) && new Set(a).size === a.length;
+}
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(KEY));
+    return s && validNums(s.history) ? s : null;
+  }catch(e){ return null; }
+}
+function save(){
+  if(isDisplay) return;
+  try{
+    localStorage.setItem(KEY, JSON.stringify({history, remaining, currentThemeIndex:themeIndex, callerPromptEnabled:showSay}));
+  }catch(e){ console.warn("couldn't save", e); }
+}
+function applyState(s){
+  history = s.history.slice();
+  remaining = Array.from({length:TOTAL}, (_, i) => i + 1).filter(n => !history.includes(n));
+  themeIndex = THEMES[s.currentThemeIndex] ? s.currentThemeIndex : 0;
+  showSay = !!s.callerPromptEnabled;
+}
+
+/* drawing the page */
+function buildBoard(){
+  for(let n=1;n<=TOTAL;n++){
+    const c = document.createElement("div");
+    c.className = "cell"; c.id = "cell-" + n; c.textContent = n;
+    el.board.appendChild(c);
+  }
+}
+function render(animate){
+  const last = history[history.length - 1];
+  el.number.textContent = last ?? "–";
+  if(animate){ el.ball.classList.remove("pop"); void el.ball.offsetWidth; el.ball.classList.add("pop"); }
+  for(let n=1;n<=TOTAL;n++){
+    const c = $("cell-" + n);
+    c.classList.toggle("on", history.includes(n));
+    c.classList.toggle("latest", n === last);
+  }
+  el.recent.innerHTML = "";
+  history.slice(-6, -1).reverse().forEach(n => {
+    const s = document.createElement("span"); s.textContent = n; el.recent.appendChild(s);
+  });
+  el.count.textContent = history.length ? `${history.length} of ${TOTAL} called` : "No numbers called yet";
+  el.say.classList.toggle("on", showSay && !isDisplay);
+  el.sayText.textContent = last ? (CALLS[last] ? `${CALLS[last]} – number ${last}` : `Number ${last}`) : "Waiting for the first number";
+  el.draw.disabled = remaining.length === 0;
+  el.draw.textContent = remaining.length ? "Next number" : "All 90 called";
+  el.undo.disabled = history.length === 0;
+  el.optSay.checked = showSay;
+}
+
+/* buttons */
+function drawNumber(){
+  if(!remaining.length){ el.msg.textContent = "All 90 numbers have been called. Time to check the cards."; return; }
+  history.push(remaining.splice(Math.floor(Math.random() * remaining.length), 1)[0]);
+  el.msg.textContent = "";
+  save(); render(true);
+}
+function undoLast(){
+  if(!history.length) return;
+  remaining.push(history.pop());
+  el.msg.textContent = "Last number put back in the pool.";
+  save(); render(false);
+}
+function newGame(){
+  if(history.length && !confirm("Start a new game? The numbers called so far will be cleared.")) return;
+  history = []; remaining = Array.from({length:TOTAL}, (_, i) => i + 1);
+  el.msg.textContent = "";
+  save(); render(false);
+}
+function openBigScreen(){
+  if(bigWin && !bigWin.closed){ bigWin.focus(); return; }
+  bigWin = window.open(location.href.split("#")[0] + "#display", "bingo_display", "width=1200,height=720");
+  if(!bigWin) el.msg.textContent = "The big-screen window was blocked. Allow pop-ups for this page and try again.";
+}
+
+window.enableCallerPrompt  = () => { showSay = true;  save(); render(false); };
+window.disableCallerPrompt = () => { showSay = false; save(); render(false); };
+
+/* start up */
+THEMES.forEach((t, i) => { const o = document.createElement("option"); o.value = i; o.textContent = t.name; el.theme.appendChild(o); });
+buildBoard(); buildLights();
+
+const saved = load();
+if(saved) applyState(saved); else remaining = Array.from({length:TOTAL}, (_, i) => i + 1);
+setTheme(themeIndex);
+render(false);
+
+if(isDisplay){
+  document.body.classList.add("display");
+  document.title = "Bingo – big screen";
+  // the big-screen window just follows the main one through localStorage
+  addEventListener("storage", e => {
+    if(e.key !== KEY) return;
+    const s = load(); if(!s) return;
+    const lastBefore = history[history.length - 1], themeBefore = themeIndex;
+    applyState(s);
+    if(themeIndex !== themeBefore) setTheme(themeIndex);
+    render(history.length > 0 && history[history.length - 1] !== lastBefore);
+  });
+}else{
+  el.draw.onclick = drawNumber; el.undo.onclick = undoLast; el.reset.onclick = newGame; el.big.onclick = openBigScreen;
+  el.theme.onchange = () => setTheme(parseInt(el.theme.value, 10) || 0);
+  el.optSay.onchange = () => { showSay = el.optSay.checked; save(); render(false); };
+  document.addEventListener("keydown", e => {
+    if(e.target.closest("select,input,button") || e.ctrlKey || e.metaKey) return;
+    if(e.code === "Space"){ e.preventDefault(); drawNumber(); }
+    else if(e.key.toLowerCase() === "u") undoLast();
+  });
+}
+</script>
+</body>
+</html>
